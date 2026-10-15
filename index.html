@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Офис AI-агентов — Lynx Vision / HealthPulse / Sustainability</title>
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDE7DC;
+    --floor:#F6F1E7;
+    --wall:#D8CFBE;
+    --ink:#241C14;
+    --mute:#6B6050;
+    --line:#C9BEA8;
+    --desk:#E7D9BE;
+    --desk-edge:#C8B088;
+    --monitor:#241C14;
+    --paper:#FBF8F2;
+    --lynx:#C9701F;
+    --pulse:#C23B2A;
+    --leaf:#4C7A45;
+    --steel:#2E5A82;
+    --shadow:rgba(36,28,20,.14);
+    color-scheme: light dark;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17140F;
+      --floor:#211C15;
+      --wall:#332C21;
+      --ink:#EFE8DA;
+      --mute:#A99E8A;
+      --line:#3C3426;
+      --desk:#3A2F20;
+      --desk-edge:#574630;
+      --paper:#241E16;
+      --lynx:#E08A3E;
+      --pulse:#E2543F;
+      --leaf:#6FA468;
+      --steel:#5C8FBF;
+      --shadow:rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17140F; --floor:#211C15; --wall:#332C21; --ink:#EFE8DA; --mute:#A99E8A;
+    --line:#3C3426; --desk:#3A2F20; --desk-edge:#574630; --paper:#241E16;
+    --lynx:#E08A3E; --pulse:#E2543F; --leaf:#6FA468; --steel:#5C8FBF; --shadow:rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body::before{
+    content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+    background:var(--bg);z-index:10;
+  }
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Onest',system-ui,-apple-system,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.unb{font-family:'Unbounded','Onest',sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 18px;}
+
+  header.top{padding:28px 0 14px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line);
+    padding-top:calc(28px + env(safe-area-inset-top,0px));}
+  header.top h1{font-size:clamp(20px,4vw,28px);font-weight:700;margin:0 0 8px;line-height:1.2;}
+  header.top p{margin:0 0 14px;color:var(--mute);font-size:14.5px;max-width:62ch;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:4px;}
+  .seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden;}
+  .seg button{font:inherit;font-size:13px;font-weight:600;background:var(--paper);color:var(--ink);border:0;padding:7px 12px;cursor:pointer;border-right:1px solid var(--line);}
+  .seg button:last-child{border-right:0;}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);}
+  .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--mute);}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
+  .phase-note{font-size:13px;color:var(--mute);margin:10px 0 0;min-height:18px;}
+
+  .office{padding:22px 0 60px;}
+  .floor{
+    background:var(--floor);
+    border:1.5px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+    display:flex;flex-direction:column;gap:14px;
+    position:relative;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:28px 28px;
+    background-position:-1px -1px;
+  }
+
+  .reception{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    border:1.5px dashed var(--line);border-radius:12px;padding:10px 14px;background:var(--paper);
+  }
+  .reception b{font-size:12.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-right:4px;}
+  .in-item{display:inline-flex;align-items:center;gap:5px;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 10px;}
+
+  .room{
+    border:1.5px dashed var(--line);
+    border-radius:12px;
+    padding:14px 14px 16px;
+    background:rgba(255,255,255,.08);
+  }
+  .room-label{
+    font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--mute);margin-bottom:10px;display:block;
+  }
+  .room.office1 .room-label{color:var(--steel);}
+  .desks{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;}
+  .desks.big{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));}
+
+  .desk{
+    font:inherit;cursor:pointer;background:none;border:0;padding:0;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    text-align:center;position:relative;color:var(--ink);
+  }
+  .monitor{
+    width:52px;height:38px;border-radius:6px;background:var(--monitor);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 0 var(--shadow);position:relative;
+    border:2px solid var(--c);
+  }
+  .monitor svg{width:24px;height:24px;stroke:var(--c);}
+  .desk-surface{
+    width:76px;height:14px;background:var(--desk);border:1.5px solid var(--desk-edge);
+    border-radius:4px;margin-top:-3px;
+  }
+  .chair{
+    width:20px;height:8px;border-radius:0 0 8px 8px;background:var(--desk-edge);margin-top:-4px;opacity:.9;
+  }
+  .plate b{display:block;font-size:12.5px;font-weight:700;line-height:1.2;}
+  .plate small{display:block;font-size:10.5px;color:var(--mute);font-family:monospace;}
+  .desk .corner-tag{
+    position:absolute;top:-8px;right:6px;font-size:9.5px;font-weight:700;
+    background:var(--c);color:#fff;border-radius:999px;padding:1px 6px;
+  }
+  .desk:hover .monitor{transform:translateY(-1px);}
+  .desk.vacant{opacity:.42;}
+  .desk.vacant .monitor{border-style:dashed;background:transparent;}
+  .desk.vacant .corner-tag{background:transparent;border:1px dashed var(--mute);color:var(--mute);}
+  .desk.vacant .plate small{color:var(--mute);}
+  .desk.sel .monitor{outline:2.5px solid var(--ink);outline-offset:2px;}
+
+  .corridor{
+    display:flex;align-items:center;gap:10px;color:var(--mute);font-size:12px;
+    padding:2px 6px;
+  }
+  .corridor .wire{flex:1;height:0;border-top:2px dashed var(--mute);opacity:.55;}
+
+  .boss-room{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .boss-room .note{font-size:12.5px;color:var(--mute);max-width:46ch;}
+
+  /* ---------- sheet ---------- */
+  #sheet{
+    position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+    max-width:760px;margin:0 auto;z-index:40;
+    background:var(--paper);border:1.5px solid var(--ink);border-top-width:5px;
+    box-shadow:0 16px 44px rgba(0,0,0,.28);
+    max-height:72vh;display:flex;flex-direction:column;border-radius:14px 14px 10px 10px;
+    transform:translateY(calc(100% + 30px));transition:transform .22s ease;
+  }
+  #sheet.open{transform:none;}
+  .sh-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line);}
+  .sh-ic{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sh-ic svg{width:22px;height:22px;stroke:#fff;}
+  .sh-name{font-family:'Unbounded',sans-serif;font-weight:700;font-size:17px;line-height:1.1;}
+  .sh-sub{font-size:12px;color:var(--mute);font-family:monospace;}
+  .sh-tag{margin-left:auto;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;color:#fff;}
+  .sh-close{border:1px solid var(--line);background:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;color:var(--ink);flex-shrink:0;}
+  .sh-body{overflow:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:14px;font-size:14px;}
+  .sh-body h4{margin:0 0 5px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);}
+  .sh-body p{margin:0;}
+  .sh-body ul{margin:0;padding-left:18px;}
+  .sh-body li{margin-bottom:3px;}
+  .sh-foot{display:flex;gap:16px;flex-wrap:wrap;padding-top:4px;border-top:1px dashed var(--line);font-size:13px;}
+  .sh-foot b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin-bottom:2px;font-weight:700;}
+
+  footer{padding:10px 0 50px;color:var(--mute);font-size:12.5px;text-align:center;}
+
+  @media (max-width:640px){
+    .desks{grid-template-columns:repeat(auto-fill,minmax(102px,1fr));}
+    .monitor{width:46px;height:34px;}
+    .monitor svg{width:20px;height:20px;}
+    .desk-surface{width:64px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>🏢 Офис AI-агентов</h1>
+    <p>16 коллег на одной площадке: наблюдают, анализируют, предупреждают. Нажми на стол — увидишь, чем человек (агент) сейчас занят, что получает и кому отчитывается.</p>
+    <div class="controls">
+      <div class="seg" id="phaseSeg">
+        <button data-p="4" aria-pressed="true">Все наняты</button>
+        <button data-p="1">Ф1</button>
+        <button data-p="2">Ф2</button>
+        <button data-p="3">Ф3</button>
+        <button data-p="4b">Ф4</button>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--lynx)"></i>Lynx Vision</span>
+        <span><i style="background:var(--pulse)"></i>HealthPulse</span>
+        <span><i style="background:var(--leaf)"></i>Sustainability</span>
+        <span><i style="background:var(--steel)"></i>общая платформа</span>
+      </div>
+    </div>
+    <p class="phase-note" id="phaseNote"></p>
+  </div>
+</header>
+
+<main class="office">
+  <div class="wrap">
+    <div class="floor">
+
+      <div class="reception">
+        <b>Ресепшн · приходит снаружи</b>
+        <span class="in-item">📁 файлы проекта</span>
+        <span class="in-item">📷 камеры и каски</span>
+        <span class="in-item">⌚ носимые устройства</span>
+      </div>
+
+      <div class="room boss-room">
+        <span class="room-label" style="position:static;margin:0;">Кабинет управления</span>
+        <div id="roomA0"></div>
+        <p class="note">Сидит отдельно: ведёт расписание всего офиса и первым замечает, если кто-то замолчал.</p>
+      </div>
+
+      <div class="room">
+        <span class="room-label">Отдел защиты и планирования</span>
+        <div class="desks" id="roomPlan"></div>
+      </div>
+
+      <div class="room">
+        <span class="room-label">Пост наблюдения</span>
+        <div class="desks" id="roomObserve"></div>
+      </div>
+
+      <div class="room office1">
+        <span class="room-label">Опен-спейс · анализ по продуктам</span>
+        <div class="desks big" id="roomAnalyze"></div>
+      </div>
+
+      <div class="room">
+        <span class="room-label">Переговорка · связка решений</span>
+        <div class="desks" id="roomFusion"></div>
+      </div>
+
+      <div class="room">
+        <span class="room-label">Диспетчерская</span>
+        <div class="desks" id="roomDispatch"></div>
+      </div>
+
+      <div class="corridor"><span>🔌 шина событий — общая сеть под полом, по ней бегут все сообщения</span><span class="wire"></span></div>
+
+      <div class="room">
+        <span class="room-label">Архив</span>
+        <div class="desks" id="roomArchive"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">Рабочий материал · на основе архитектуры цепочки AI-агентов для Lynx Vision, HealthPulse и Sustainability</footer>
+
+<aside id="sheet" role="dialog" aria-modal="false"></aside>
+
+<script>
+const ICON = {
+  baton:   `<path d="M5 19L17 7"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/><path d="M4 21c3-1 5-1 7-3"/>`,
+  compass: `<circle cx="12" cy="12" r="8"/><path d="M15 9l-4 2-2 4 4-2z"/>`,
+  shield:  `<path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6z"/><path d="M12 12.6V15"/><circle cx="12" cy="10.3" r="1.1" fill="currentColor" stroke="none"/>`,
+  eye:     `<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="3"/>`,
+  wrist:   `<path d="M6 8h12v8H6z"/><path d="M4 12h2M18 12h2"/><path d="M9 12c1 2 5 2 6 0"/>`,
+  check:   `<rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M8 9l2 2 3-4"/><path d="M8 15h8"/>`,
+  pallet:  `<rect x="6" y="9" width="5" height="5"/><rect x="13" y="9" width="5" height="5"/><path d="M4 16h16M4 20h16"/>`,
+  cloud:   `<path d="M7 16a4 4 0 1 1 .8-7.9 5 5 0 0 1 9.6 1.4A3.6 3.6 0 0 1 17 16z"/><path d="M9 19v1.5M12 19v2M15 19v1.5"/>`,
+  drop:    `<path d="M12 3c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10z"/><path d="M9.5 13a2.5 2.5 0 0 0 3.5 2.3"/>`,
+  column:  `<rect x="9" y="3" width="6" height="16"/><path d="M6 21h12"/><path d="M13 9l2 2-2 2"/>`,
+  leaf:    `<path d="M6 20C6 10 14 4 20 4c0 8-6 16-14 16z"/><path d="M6 20c2-4 6-8 10-10"/>`,
+  hub:     `<circle cx="12" cy="12" r="2"/><path d="M12 10V4M12 14v6M10 12H4M14 12h6"/>`,
+  chess:   `<path d="M7 21h10"/><path d="M8 21V11h8v10"/><path d="M8 11l-1-5h2l1 2 2-2 2 2 1-2h2l-1 5z"/>`,
+  radio:   `<rect x="7" y="8" width="10" height="12" rx="1.5"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><circle cx="12" cy="14" r="2"/>`,
+  mega:    `<path d="M3 10v4h3l9 4V6l-9 4z"/><path d="M19 9a4 4 0 0 1 0 6"/>`,
+  hand:    `<path d="M2 12l4-3 3 2 3-2 3 2 3-2 4 3"/><path d="M9 11l3 3 3-3"/>`,
+  book:    `<path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"/><path d="M12 6v14"/>`
+};
+function svg(type){ return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[type]}</svg>`; }
+
+const PROD = { lynx:{name:'Lynx Vision', c:'var(--lynx)'}, pulse:{name:'HealthPulse', c:'var(--pulse)'}, leaf:{name:'Sustainability', c:'var(--leaf)'}, core:{name:'Общая платформа', c:'var(--steel)'} };
+
+const AG = [
+{id:'A0', orig:'Orchestrator', fun:'Дирижёр', icon:'baton', prod:'core', phase:1,
+  role:'Ведёт долгие процессы — подключение объекта, дневной и недельный циклы — и первым замечает, если кто-то из коллег пропал со связи.',
+  trigger:'Расписание, загрузка файлов, смена состояния объекта, пропавший «пульс» коллеги.',
+  inputs:['статусы и «пульс» агентов','расписания объектов','подтверждения людей'],
+  outputs:['запуск рабочих процессов','состояние объекта: draft → monitoring → degraded','тревога, если кто-то замолчал'],
+  hitl:'Клиент подтверждает модель проекта — без этого Дирижёр не запускает остальных.',
+  fail:'Если молчит сам Дирижёр — срочные сигналы всё равно идут напрямую по внутренней сети, в обход него.'},
+{id:'A1', orig:'Plan Parser', fun:'Штурман', icon:'compass', prod:'core', phase:1,
+  role:'Превращает присланные клиентом график и смету в эталонную карту проекта — с ней потом сверяется всё, что видят камеры.',
+  trigger:'Клиент загрузил Excel, PDF или CSV с графиком.',
+  inputs:['график работ','смета (BOQ)','геолокация объекта'],
+  outputs:['эталонная модель проекта','список вопросов по неясным строкам'],
+  hitl:'Клиент подтверждает модель — это ворота перед стартом мониторинга.',
+  fail:'Непонятную строку не додумывает — присылает клиенту отдельным вопросом.'},
+{id:'A2', orig:'Privacy Guard', fun:'Страж', icon:'shield', prod:'core', phase:1,
+  role:'Проверяет каждый кадр и каждый сигнал с носимых на приватность, прежде чем пустить дальше по цепочке.',
+  trigger:'Любой новый кадр с камеры или пакет телеметрии с браслета.',
+  inputs:['сырые кадры','телеметрия носимых','согласия и уведомления сотрудников'],
+  outputs:['очищенный поток с меткой цели','решение: разрешить, запретить, преобразовать'],
+  hitl:'Правила проверяет и утверждает юрист — сам Страж их не меняет.',
+  fail:'При любом сбое закрывает дверь наглухо: данные дальше не идут, пока проблема не решена.'},
+{id:'A3', orig:'Vision', fun:'Рысий Глаз', icon:'eye', prod:'lynx', phase:1,
+  role:'Смотрит видео с камер и касок и превращает картинку в структурированные наблюдения: этап работ, техника, материалы, люди.',
+  trigger:'Поток кадров по расписанию съёмки и по движению в кадре.',
+  inputs:['очищенные кадры от Стража','что именно искать — из эталонной модели'],
+  outputs:['детекции: класс объекта, координаты, уверенность'],
+  hitl:'Спорные кадры уходят людям на разметку.',
+  fail:'Камера ослепла или офлайн — честно сообщает «не вижу», а не придумывает прогресс.'},
+{id:'A4', orig:'Wearable', fun:'Гонец', icon:'wrist', prod:'pulse', phase:1,
+  role:'Собирает сигналы с браслетов разных производителей и приводит их к единому формату.',
+  trigger:'Телеметрия устройства, SOS-кнопка, падение.',
+  inputs:['пульс, температура, потоотделение, GPS, сигнал SOS'],
+  outputs:['состояние работника','срочные сигналы (SOS, падение) — напрямую в Диспетчерскую, минуя анализ'],
+  hitl:'—',
+  fail:'Браслет снят или связь пропала — явный сигнал «нет данных», а не тишина.'},
+{id:'A5', orig:'Progress', fun:'Табельщик', icon:'check', prod:'lynx', phase:1,
+  role:'Сверяет, что реально происходит на площадке, с тем, что должно происходить по плану.',
+  trigger:'Ежедневный пересчёт и каждая новая детекция от Рысьего Глаза.',
+  inputs:['детекции','эталонная модель проекта'],
+  outputs:['статус задачи и % выполнения','сигнал отклонения от плана'],
+  hitl:'Надзорная компания может подтвердить или оспорить его оценку.',
+  fail:'Нет данных — статус «не подтверждено», а не «отставание».'},
+{id:'A6', orig:'Materials', fun:'Кладовщик', icon:'pallet', prod:'lynx', phase:1,
+  role:'Следит, что приехало на площадку, куда распределено и чего не хватает.',
+  trigger:'Детекции материалов и техники, график поставок из сметы.',
+  inputs:['детекции поддонов и техники','список материалов по смете'],
+  outputs:['журнал материалов','сигнал «материал не там или не вовремя»'],
+  hitl:'Прораб подтверждает спорные позиции.',
+  fail:'Нет уверенности — количество помечается как оценка, а не точная цифра.'},
+{id:'A7', orig:'Weather Risk', fun:'Синоптик', icon:'cloud', prod:'lynx', phase:2,
+  role:'Заранее вычисляет, какие этапы работ попадут в опасное погодное окно.',
+  trigger:'Обновление прогноза погоды, изменение графика.',
+  inputs:['прогноз погоды по геолокации','чувствительность задач к погоде'],
+  outputs:['предупреждение: задача, окно времени, уровень риска'],
+  hitl:'Технолог утверждает пороги для разных видов работ.',
+  fail:'Прогноз недоступен — использует последний известный с пометкой «устарел».'},
+{id:'A8', orig:'Heat Stress', fun:'Хранитель', icon:'drop', prod:'pulse', phase:1,
+  role:'Считает риск теплового стресса и обезвоживания по каждому работнику и бригаде — до появления симптомов.',
+  trigger:'Каждое обновление состояния работника, смена условий среды.',
+  inputs:['состояние работника от Гонца','условия среды'],
+  outputs:['уровень риска по человеку и бригаде','рекомендация: отдых, вода, снять с задачи'],
+  hitl:'Супервайзер решает: отдых, вода или снять с задачи.',
+  fail:'Нет сигнала с браслета — тревога «нет данных», а не молчаливое «всё в порядке».'},
+{id:'A9', orig:'Structural', fun:'Сейсмограф', icon:'column', prod:'lynx', phase:3,
+  role:'Следит за датчиками на критичных конструкциях и предупреждает о риске обрушения.',
+  trigger:'Поток датчиков: трещины, вибрация, наклон.',
+  inputs:['данные датчиков конструкций (SHM)','перечень инструментируемых элементов от инженера'],
+  outputs:['уровень риска по конкретной конструкции'],
+  hitl:'Любой уровень «критично» подтверждает инженер — автоматических действий пока нет.',
+  fail:'Датчик замолчал — отдельное тревожное событие с повышенным приоритетом.'},
+{id:'A10', orig:'Carbon', fun:'Эколог', icon:'leaf', prod:'leaf', phase:3,
+  role:'Считает углеродный след материалов по данным логистики.',
+  trigger:'Обновление журнала материалов, конец периода отчётности.',
+  inputs:['журнал материалов от Кладовщика','коэффициенты выбросов'],
+  outputs:['углеродный след по материалу, этапу, зоне'],
+  hitl:'Эколог или владелец методологии утверждает коэффициенты.',
+  fail:'Нет коэффициента для материала — позиция помечается, а не заменяется «средним».'},
+{id:'A11', orig:'Fusion', fun:'Узел', icon:'hub', prod:'core', phase:3,
+  role:'Единственное место, где данные от всех коллег сходятся вместе и видна полная картина риска.',
+  trigger:'Любое событие риска в заданном окне времени.',
+  inputs:['прогресс, погода, тепловой риск, материалы, углерод'],
+  outputs:['объединённый риск: задача × погода × нагрузка на людей'],
+  hitl:'—',
+  fail:'Если какого-то источника не хватает — честно помечает «неполные данные».'},
+{id:'A12', orig:'Replanner', fun:'Стратег', icon:'chess', prod:'core', phase:2,
+  role:'Предлагает 2–3 варианта, как перестроить план, когда что-то пошло не так. Решение всегда за человеком.',
+  trigger:'Отклонение от плана, погодный риск, объединённый риск.',
+  inputs:['эталонная модель','события риска'],
+  outputs:['варианты корректировки плана с оценкой последствий'],
+  hitl:'Прораб или менеджер проекта выбирает вариант.',
+  fail:'Нет подходящего варианта — честно говорит об этом и показывает, что мешает.'},
+{id:'A13', orig:'Alert Router', fun:'Диспетчер', icon:'radio', prod:'core', phase:1,
+  role:'Решает, кого, когда и как предупредить, и следит, чтобы сигнал не потерялся.',
+  trigger:'Любое отклонение, риск или сигнал SOS.',
+  inputs:['события риска от коллег','роли и графики смен'],
+  outputs:['отправленное уведомление','эскалация, если никто не ответил'],
+  hitl:'Подтверждение человека закрывает цепочку.',
+  fail:'Канал недоступен — переключается на запасной, всё фиксируется.'},
+{id:'A14', orig:'Report', fun:'Глашатай', icon:'mega', prod:'core', phase:1,
+  role:'Собирает понятные сводки под каждую роль: прорабу, надзору, инвестору, покупателю квартиры.',
+  trigger:'Утро каждого дня, конец недели или месяца, запрос пользователя.',
+  inputs:['состояния и события всех коллег'],
+  outputs:['сводки, отчёты, поток для покупателей (Buyer View)'],
+  hitl:'Отчёт инвестору и надзору можно просмотреть перед отправкой.',
+  fail:'Нет данных за период — честно об этом и пишет, не выдумывает цифры.'},
+{id:'A15', orig:'Integration', fun:'Посол', icon:'hand', prod:'core', phase:3,
+  role:'Поддерживает связь с внешними системами проекта — Primavera P6, Aconex, FirstBit.',
+  trigger:'Изменения во внешних системах, одобренный план.',
+  inputs:['внешние графики и документы'],
+  outputs:['обновление эталонной модели','запись одобренного плана наружу'],
+  hitl:'Конфликт версий решает человек — Посол ничего не перезаписывает сам.',
+  fail:'Внешняя система недоступна — ставит задачу в очередь и пробует снова.'},
+{id:'A16', orig:'Audit & Evidence', fun:'Летописец', icon:'book', prod:'core', phase:1,
+  role:'Ведёт неизменяемый журнал: что система увидела, решила и кто что подтвердил.',
+  trigger:'Каждое событие в системе и каждое решение человека.',
+  inputs:['все события от всех коллег','подтверждения людей'],
+  outputs:['журнал с печатью (хэш-цепочка)','пакеты доказательств'],
+  hitl:'Доступ к архиву выдаётся по ролям и фиксируется.',
+  fail:'Если запись не удалась — тревога всё равно доставляется, а сбой фиксируется отдельно.'}
+];
+const BY = Object.fromEntries(AG.map(a=>[a.id,a]));
+let curPhase = 4, curId = null;
+
+function deskHTML(a){
+  return `<button class="desk" data-id="${a.id}" style="--c:${PROD[a.prod].c}">
+    <span class="corner-tag">${a.id}</span>
+    <span class="monitor">${svg(a.icon)}</span>
+    <span class="desk-surface"></span>
+    <span class="chair"></span>
+    <span class="plate"><b>${a.fun}</b><small>${a.orig}</small></span>
+  </button>`;
+}
+document.getElementById('roomA0').innerHTML = deskHTML(BY.A0);
+document.getElementById('roomPlan').innerHTML = ['A1','A2'].map(id=>deskHTML(BY[id])).join('');
+document.getElementById('roomObserve').innerHTML = ['A3','A4'].map(id=>deskHTML(BY[id])).join('');
+document.getElementById('roomAnalyze').innerHTML = ['A5','A6','A7','A8','A9','A10'].map(id=>deskHTML(BY[id])).join('');
+document.getElementById('roomFusion').innerHTML = ['A11','A12'].map(id=>deskHTML(BY[id])).join('');
+document.getElementById('roomDispatch').innerHTML = ['A13','A14','A15'].map(id=>deskHTML(BY[id])).join('');
+document.getElementById('roomArchive').innerHTML = deskHTML(BY.A16);
+
+const sheet = document.getElementById('sheet');
+const li = arr => '<ul>'+arr.map(x=>`<li>${x}</li>`).join('')+'</ul>';
+
+function renderSheet(id){
+  const a = BY[id];
+  const c = PROD[a.prod].c;
+  sheet.style.borderTopColor = c;
+  sheet.innerHTML = `
+    <div class="sh-head">
+      <span class="sh-ic" style="background:${c}">${svg(a.icon)}</span>
+      <div><span class="sh-name">${a.fun}</span><br><span class="sh-sub">${a.id} · ${a.orig}</span></div>
+      <span class="sh-tag" style="background:${c}">${PROD[a.prod].name}</span>
+      <button class="sh-close" id="shClose" aria-label="Закрыть">×</button>
+    </div>
+    <div class="sh-body">
+      <div><h4>Чем занят</h4><p>${a.role}</p></div>
+      <div><h4>Когда встаёт из-за стола</h4><p>${a.trigger}</p></div>
+      <div><h4>Что получает</h4>${li(a.inputs)}</div>
+      <div><h4>Что передаёт дальше</h4>${li(a.outputs)}</div>
+      <div class="sh-foot">
+        <div><b>Кто контролирует</b>${a.hitl}</div>
+        <div><b>Если прогулял смену</b>${a.fail}</div>
+        <div><b>Нанят с фазы</b>Ф${a.phase}</div>
+      </div>
+    </div>`;
+  document.getElementById('shClose').addEventListener('click', closeSheet);
+}
+function openSheet(id){
+  curId = id; renderSheet(id); sheet.classList.add('open');
+  document.querySelectorAll('.desk').forEach(d=>d.classList.toggle('sel', d.dataset.id===id));
+}
+function closeSheet(){ sheet.classList.remove('open'); curId=null;
+  document.querySelectorAll('.desk').forEach(d=>d.classList.remove('sel')); }
+
+document.querySelectorAll('.desk').forEach(d=>d.addEventListener('click', ()=>openSheet(d.dataset.id)));
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && sheet.classList.contains('open')) closeSheet(); });
+
+function applyPhase(){
+  document.querySelectorAll('.desk').forEach(d=>{
+    const a = BY[d.dataset.id];
+    const off = a.phase > curPhase;
+    d.classList.toggle('vacant', off);
+    if(off){ d.querySelector('.plate b').textContent = 'Вакансия'; d.querySelector('.plate small').textContent = 'открыта с Ф'+a.phase; }
+    else { d.querySelector('.plate b').textContent = a.fun; d.querySelector('.plate small').textContent = a.orig; }
+  });
+  const note = document.getElementById('phaseNote');
+  if(curPhase>=4){ note.textContent = 'Показан полный штат. Выберите фазу, чтобы увидеть, кто уже вышел на работу к её концу.'; }
+  else { note.textContent = `Фаза Ф${curPhase}: серые столы — позиции, которые ещё не наняты.`; }
+}
+document.getElementById('phaseSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#phaseSeg button').forEach(x=>x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+  curPhase = b.dataset.p==='4b' ? 4 : parseInt(b.dataset.p,10);
+  applyPhase();
+});
+applyPhase();
+</script>
+</body>
+</html>
