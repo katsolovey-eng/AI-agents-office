@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QRONE: цепочка AI-агентов</title>
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAEFF3;
+    --surface:#F8FAFB;
+    --ink:#0F2236;
+    --mute:#4E6378;
+    --line:#BAC7D2;
+    --steel:#2D5B88;
+    --lynx:#D9822B;
+    --lynx-t:#955011;
+    --pulse:#D2402B;
+    --leaf:#4B7B49;
+    --code-bg:#F8FAFB;
+    --edge:#8EA1B1;
+    --hero-grid:rgba(15,34,54,.07);
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0D1822;
+      --surface:#14232F;
+      --ink:#E6EEF5;
+      --mute:#9DB1C3;
+      --line:#2D4254;
+      --steel:#6BA3D6;
+      --lynx:#E59A47;
+      --lynx-t:#E8A55A;
+      --pulse:#EE6B57;
+      --leaf:#7DB07A;
+      --code-bg:#101E29;
+      --edge:#5C7487;
+      --hero-grid:rgba(230,238,245,.06);
+    }
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{transition:none !important;} }
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+  h1,h2,h3{font-family:'Unbounded','Onest',sans-serif;font-weight:600;margin:0;letter-spacing:-.01em;}
+  h2{font-size:clamp(22px,2.8vw,30px);line-height:1.2;margin-bottom:14px;}
+  h3{font-size:17px;line-height:1.3;margin-bottom:8px;font-family:'Onest',sans-serif;font-weight:700;letter-spacing:0;}
+  p{margin:0 0 12px;max-width:70ch;}
+  code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;}
+  a{color:var(--steel);}
+  button{font:inherit;color:inherit;}
+  :focus-visible{outline:3px solid var(--steel);outline-offset:2px;}
+  section{padding:68px 0 8px;scroll-margin-top:56px;}
+  .lead{color:var(--mute);font-size:17px;max-width:64ch;}
+  .note{color:var(--mute);font-size:14px;max-width:80ch;}
+  .tag{display:inline-block;font-size:12.5px;line-height:1;padding:5px 9px;border:1px solid var(--line);border-radius:4px;color:var(--mute);}
+  .tag.prop{border-style:dashed;}
+
+  /* ---------- top nav ---------- */
+  .topnav{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);}
+  .topnav .wrap{display:flex;gap:22px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;align-items:center;height:48px;}
+  .topnav .wrap::-webkit-scrollbar{display:none;}
+  .topnav a{color:var(--mute);text-decoration:none;font-size:14px;font-weight:500;padding:4px 0;border-bottom:2px solid transparent;}
+  .topnav a:hover{color:var(--ink);border-bottom-color:var(--ink);}
+  .topnav .brand{font-family:'Unbounded',sans-serif;font-weight:600;font-size:14px;color:var(--ink);margin-right:8px;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 40px;position:relative;border-bottom:1px solid var(--line);
+    background-image:
+      linear-gradient(var(--hero-grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--hero-grid) 1px,transparent 1px);
+    background-size:48px 48px;}
+  .hero h1{font-size:clamp(30px,5vw,54px);line-height:1.08;max-width:18ch;margin-bottom:20px;}
+  .hero .lead{margin-bottom:26px;}
+  .chain{
+    border:1px solid var(--ink);background:var(--surface);
+    padding:14px 18px;font-size:14px;line-height:1.9;max-width:100%;
+  }
+  .chain b{font-weight:600;}
+  .chain .ar{color:var(--mute);padding:0 6px;}
+  .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+
+  /* ---------- principles ---------- */
+  .rules{margin:26px 0 0;border-top:1px solid var(--ink);}
+  .rule{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:12px 32px;padding:16px 0;border-bottom:1px solid var(--line);}
+  .rule dt{font-weight:700;}
+  .rule dd{margin:0;color:var(--mute);max-width:72ch;}
+  .rule dd b{color:var(--ink);font-weight:600;}
+
+  /* ---------- diagram ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;margin:22px 0 14px;}
+  .seg{display:inline-flex;border:1px solid var(--ink);border-radius:6px;overflow:hidden;background:var(--surface);}
+  .seg button{background:none;border:0;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:500;border-right:1px solid var(--line);}
+  .seg button:last-child{border-right:0;}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);}
+  .seg-label{font-size:14px;color:var(--mute);margin-right:8px;}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--mute);}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+  .legend .dash{background:none;border:1.5px dashed var(--mute);}
+  .legend .ln{background:none;border-top:2px dotted var(--edge);height:0;width:18px;border-radius:0;vertical-align:3px;}
+  .phase-desc{font-size:14px;color:var(--mute);min-height:22px;margin:0 0 12px;}
+
+  .diagram-box{border:1px solid var(--line);background:var(--surface);padding:8px;overflow-x:auto;}
+  #dia{display:block;width:100%;min-width:980px;height:auto;}
+  #dia text{font-family:'Onest',system-ui,sans-serif;}
+  .col-h{font-size:12.5px;fill:var(--mute);font-weight:600;}
+  .node{cursor:pointer;}
+  .node .box{fill:var(--surface);stroke:var(--line);stroke-width:1.2;transition:stroke .15s;}
+  .node:hover .box{stroke:var(--ink);}
+  .node.sel .box{stroke:var(--ink);stroke-width:2.4;}
+  .node:focus-visible{outline:none;}
+  .node:focus-visible .box{stroke:var(--steel);stroke-width:3;}
+  .node .nid{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;fill:var(--mute);}
+  .node .nname{font-size:13.5px;font-weight:600;fill:var(--ink);}
+  .node .nsub{font-size:11px;fill:var(--mute);}
+  .node .nx{font-size:10.5px;fill:var(--mute);}
+  .node.off .box{stroke-dasharray:4 3;fill:transparent;}
+  .node.off text{opacity:.4;}
+  .node.off .strip{opacity:.4;}
+  .node.src .box{stroke-dasharray:3 3;fill:transparent;}
+  .node.src{cursor:default;}
+  .band .box{fill:var(--surface);}
+  .edge{fill:none;stroke:var(--edge);stroke-width:1.4;transition:opacity .15s;}
+  .edge.dot{stroke-dasharray:2 4;}
+  .edge.off{opacity:.2;stroke-dasharray:3 4;}
+  .edge.dim{opacity:.13;}
+  .edge.hl{stroke-width:2.4;opacity:1;stroke-dasharray:none;}
+
+  /* list view (mobile) */
+  #list{display:none;}
+  .lgroup{margin-bottom:22px;}
+  .lgroup h3{font-size:14px;color:var(--mute);margin:0 0 8px;font-weight:600;}
+  .litem{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-left-width:5px;padding:10px 12px;margin-bottom:6px;cursor:pointer;border-radius:4px;}
+  .litem .mono{font-size:12px;font-weight:600;color:var(--mute);}
+  .litem b{display:block;font-weight:600;line-height:1.25;}
+  .litem small{color:var(--mute);}
+  .litem.off{opacity:.45;border-style:dashed;border-left-style:solid;}
+  .litem.sel{border-color:var(--ink);}
+
+  /* ---------- detail sheet ---------- */
+  #sheet{
+    position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));
+    max-width:1180px;margin:0 auto;z-index:40;
+    background:var(--surface);border:1px solid var(--ink);border-top-width:4px;
+    box-shadow:0 14px 40px rgba(8,20,34,.28);
+    max-height:50vh;display:flex;flex-direction:column;
+    transform:translateY(calc(100% + 30px));transition:transform .2s ease;
+  }
+  #sheet.open{transform:none;}
+  .sh-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line);}
+  .sh-id{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;border:1.5px solid currentColor;padding:3px 7px;border-radius:4px;}
+  .sh-name{font-family:'Unbounded',sans-serif;font-weight:600;font-size:17px;}
+  .sh-tags{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
+  .sh-close{border:1px solid var(--line);background:none;width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:18px;line-height:1;}
+  .sh-close:hover{border-color:var(--ink);}
+  .sh-body{overflow:auto;padding:16px 18px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px 28px;font-size:14.5px;}
+  .sh-body h4{margin:0 0 6px;font-size:13.5px;font-weight:700;color:var(--mute);}
+  .sh-body p{margin:0 0 8px;font-size:14.5px;}
+  .sh-body ul,.sh-body ol{margin:0 0 4px;padding-left:20px;}
+  .sh-body li{margin-bottom:5px;}
+  .sh-col>div{margin-bottom:16px;}
+  .ro{list-style:none;padding:0 !important;}
+  .ro li{padding:6px 10px;border-left:3px solid var(--line);margin-bottom:6px;}
+  .ro li.now{border-left-color:var(--steel);background:rgba(45,91,136,.09);}
+  .ro li.future{opacity:.5;}
+  .ro .ph{font-weight:700;margin-right:6px;}
+  .warnbox{border:1px dashed var(--pulse);padding:8px 10px;border-radius:4px;font-size:14px;}
+
+  /* ---------- code / pre ---------- */
+  pre{margin:0;background:var(--code-bg);border:1px solid var(--line);padding:16px 18px;overflow-x:auto;font-size:13px;line-height:1.65;tab-size:2;}
+  .cm{color:var(--mute);}
+  .tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--ink);margin:22px 0 0;}
+  .tabs button{background:none;border:1px solid transparent;border-bottom:0;padding:9px 14px;cursor:pointer;font-size:14px;font-weight:500;color:var(--mute);margin-bottom:-1px;}
+  .tabs button[aria-selected="true"]{border-color:var(--ink);background:var(--surface);color:var(--ink);font-weight:600;}
+  .tabpanel{border:1px solid var(--ink);border-top:0;background:var(--surface);padding:18px;}
+  .tabpanel .sc-intro{color:var(--mute);margin-bottom:14px;max-width:72ch;}
+  ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;}
+  ol.steps li{counter-increment:s;display:grid;grid-template-columns:28px 130px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:start;}
+  ol.steps li::before{content:counter(s);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--mute);padding-top:2px;}
+  .chips{display:flex;gap:4px;flex-wrap:wrap;}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;border:1.5px solid var(--ink);padding:2px 6px;border-radius:4px;cursor:pointer;background:var(--surface);}
+  .chip:hover{background:var(--ink);color:var(--bg);}
+
+  /* ---------- tables ---------- */
+  .tbl-wrap{overflow-x:auto;margin-top:20px;border-top:1px solid var(--ink);}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:760px;}
+  th{text-align:left;font-weight:700;font-size:13.5px;color:var(--mute);padding:10px 12px 10px 0;border-bottom:1px solid var(--ink);white-space:nowrap;}
+  td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  td.m{font-family:'JetBrains Mono',monospace;font-size:12.5px;}
+  tr.click{cursor:pointer;}
+  tr.click:hover td{background:rgba(45,91,136,.07);}
+  .dot-p{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;}
+
+  /* ---------- phases ---------- */
+  .phase-row{display:grid;grid-template-columns:200px 1fr;gap:12px 32px;padding:18px 0;border-bottom:1px solid var(--line);}
+  .phase-row:first-child{border-top:1px solid var(--ink);}
+  .phase-row .pn{font-family:'Unbounded',sans-serif;font-weight:600;font-size:18px;}
+  .phase-row .pn small{display:block;font-family:'Onest',sans-serif;font-weight:400;font-size:14px;color:var(--mute);margin-top:2px;}
+  .phase-row ul{margin:0;padding:0;list-style:none;}
+  .phase-row li{margin-bottom:7px;}
+  .phase-row li .chip{margin-right:8px;}
+
+  .qs{margin-top:22px;border-top:1px solid var(--ink);}
+  .q{display:grid;grid-template-columns:1fr auto;gap:8px 20px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .q p{margin:0;color:var(--mute);}
+  .q h3{margin-bottom:3px;}
+
+  footer{padding:56px 0 120px;color:var(--mute);font-size:14px;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px){
+    .diagram-box{display:none;}
+    #list{display:block;}
+    .sh-body{grid-template-columns:1fr;}
+    #sheet{max-height:64vh;}
+    .rule{grid-template-columns:1fr;gap:4px;}
+    .phase-row{grid-template-columns:1fr;}
+    ol.steps li{grid-template-columns:24px 1fr;}
+    ol.steps li .chips{grid-column:2;}
+    ol.steps li .st{grid-column:2;}
+    .q{grid-template-columns:1fr;}
+    .sh-tags{margin-left:0;}
+  }
+  @media (max-width: 560px){
+    .wrap{padding:0 16px;}
+    section{padding-top:52px;}
+    .sh-name{font-size:15px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav" aria-label="Разделы">
+  <div class="wrap">
+    <span class="brand">QRONE</span>
+    <a href="#scheme">Схема</a>
+    <a href="#algo">Алгоритм</a>
+    <a href="#scenarios">Сценарии</a>
+    <a href="#contracts">Контракты</a>
+    <a href="#catalog">Каталог</a>
+    <a href="#stack">Стек</a>
+    <a href="#privacy">Приватность</a>
+    <a href="#phases">Фазы</a>
+    <a href="#open">Вопросы</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Цепочка AI-агентов для Lynx Vision, HealthPulse и Sustainability</h1>
+    <p class="lead">Оркестратор и 16 агентов над одним потоком данных с площадки. Ниже: кто за что отвечает, какие события передаёт дальше, где разрешён LLM и где он запрещён, что выпускаем в каждой фазе.</p>
+    <div class="chain mono">
+      <b>файлы, камеры, носимые</b><span class="ar">→</span><b>A2 Privacy Guard</b><span class="ar">→</span><b>A3 Vision</b> / <b>A4 Wearable</b><span class="ar">→</span><b>A5–A10</b> анализ<span class="ar">→</span><b>A11 Fusion</b><span class="ar">→</span><b>A12 Replanner</b><span class="ar">→</span><b>A13 Alert Router</b><span class="ar">→</span><b>A14 Report</b> / <b>A15 Integration</b>; <b>A16 Audit</b> пишет всё
+    </div>
+    <div class="hero-meta">
+      <span class="tag">Источник: сводка по трём продуктам</span>
+      <span class="tag prop">Пунктирная рамка: предложение по архитектуре, в сводке этого нет</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="principles">
+  <div class="wrap">
+    <h2>Восемь правил, на которых держится цепочка</h2>
+    <p class="lead">Эти правила определяют, как агенты соединены и что им разрешено. Если решение противоречит правилу, пересматриваем решение.</p>
+    <dl class="rules">
+      <div class="rule"><dt>Приватность стоит первой</dt><dd>Ни один агент не получает сырые кадры и физиологию в обход A2. Данные, не прошедшие политику, для остальной цепочки не существуют. При сбое политики поток закрывается (<b>fail-closed</b>).</dd></div>
+      <div class="rule"><dt>Два контура</dt><dd><b>Контур безопасности</b> (A4 → A8 → A13 и A9 → A13) детерминирован, без LLM, с предсказуемой задержкой. <b>Аналитический контур</b> (планирование, отчёты, пояснения) может использовать LLM, но не совершает необратимых действий.</dd></div>
+      <div class="rule"><dt>Всё общение через события с контрактом</dt><dd>Агенты не вызывают друг друга напрямую. Они публикуют версионированные события в общую шину. Агента можно заменить или перезапустить без правок соседей; обработка идемпотентна по <span class="mono">event_id</span>.</dd></div>
+      <div class="rule"><dt>Молчание не значит «всё хорошо»</dt><dd>Нет данных, слепая зона, браслет снят, прогноз устарел: агент выдаёт явное состояние (<span class="mono">unverified</span>, <span class="mono">no_signal</span>, <span class="mono">stale</span>), а не пустоту. Отсутствие вывода не должно читаться как отсутствие проблемы.</dd></div>
+      <div class="rule"><dt>Уверенность — часть данных</dt><dd>Каждая оценка несёт <span class="mono">confidence</span> и источник. Ниже порога оценка помечается <span class="mono">needs_review</span>: не отбрасывается молча и не подаётся как уверенный вывод.</dd></div>
+      <div class="rule"><dt>Человек подтверждает необратимое</dt><dd>Запись плана во внешние системы, эвакуация, отправка отчёта надзору: только после подтверждения. Пока юристы не ответили по ст. 53 Строительного кодекса Дубая, автоматических действий по структурным рискам нет.</dd></div>
+      <div class="rule"><dt>Дешёвый вход, дорогой анализ</dt><dd>По сводке операционные расходы на камеру около $13–45 в месяц, а оборудование отдельно. Поэтому пустые кадры отсекаем на edge, а в облако отправляем только то, что может изменить решение. <span class="tag prop">предложение</span></dd></div>
+      <div class="rule"><dt>Общие данные, не общая каша</dt><dd>Продукты читают один слой данных с площадки. Объединяются они только в A11 Fusion, и именно там действуют правила приватности: индивидуальное здоровье наружу не выходит, только агрегат по бригаде.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="scheme">
+  <div class="wrap">
+    <h2>Схема цепочки</h2>
+    <p class="lead">Слева направо: данные проходят защиту, превращаются в наблюдения, анализируются по продуктам, объединяются и доходят до людей. Нажмите на любой блок, чтобы увидеть вход, выход, логику, технологии и режимы отказа.</p>
+
+    <div class="controls">
+      <div>
+        <span class="seg-label">Что уже работает к концу фазы:</span>
+        <div class="seg" id="phaseSeg" role="group" aria-label="Фаза выпуска">
+          <button data-p="4" aria-pressed="true">Всё</button>
+          <button data-p="1" aria-pressed="false">Ф1</button>
+          <button data-p="2" aria-pressed="false">Ф2</button>
+          <button data-p="3" aria-pressed="false">Ф3</button>
+          <button data-p="4b" aria-pressed="false">Ф4</button>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="false">
+        <span><i style="background:var(--lynx)"></i>Lynx Vision</span>
+        <span><i style="background:var(--pulse)"></i>HealthPulse</span>
+        <span><i style="background:var(--leaf)"></i>Sustainability</span>
+        <span><i style="background:var(--steel)"></i>общая платформа</span>
+        <span><i class="dash"></i>ещё не выпущено в выбранной фазе</span>
+        <span><i class="ln"></i>слабый сигнал</span>
+      </div>
+    </div>
+    <p class="phase-desc" id="phaseDesc"></p>
+
+    <div class="diagram-box"><svg id="dia" viewBox="0 0 1200 870" role="group" aria-label="Схема цепочки агентов"></svg></div>
+    <div id="list" aria-label="Список агентов"></div>
+    <p class="note" style="margin-top:12px;">На схеме показаны основные потоки. Эталонная модель проекта (A1) и справочные данные читаются всеми агентами через шину и общее хранилище, поэтому линии от них не нарисованы. Полный список входов и выходов открывается по клику.</p>
+  </div>
+</section>
+
+<section id="algo">
+  <div class="wrap">
+    <h2>Основной алгоритм</h2>
+    <p class="lead">Два режима работы. Долгие процессы ведёт оркестратор (workflow-движок). Реалтайм идёт хореографией: агенты реагируют на события в шине сами, центрального маршрутизатора на этом пути нет.</p>
+<pre><code><span class="cm"># 1. Долгие процессы: оркестратор A0 (workflow-движок)</span>
+workflow onboard_site(site):
+    model = A1.parse(site.files)                       <span class="cm"># график, смета → эталонная модель</span>
+    while model.open_questions:
+        model = A1.resolve(ask_client(model.open_questions))
+    wait_for(client.confirm(model))                    <span class="cm"># ворота: без подтверждения мониторинг не стартует</span>
+    A2.apply_policy(site.jurisdiction, site.cameras)   <span class="cm"># уведомления, основание, анонимизация, TTL</span>
+    A3.calibrate(site.cameras, model.zones)
+    site.state = MONITORING
+
+workflow daily_cycle(site, date):
+    06:00  A14.digest(site, role=FOREMAN)              <span class="cm"># вчерашний прогресс, материалы, риски дня</span>
+    day    stream_mode()                               <span class="cm"># см. блок ниже, оркестратор не вмешивается</span>
+    18:00  A5.reconcile(site, date)                    <span class="cm"># вечерняя сверка плана и факта</span>
+    18:30  A16.export_labels(site, date)               <span class="cm"># подтверждения людей → разметка для калибровки</span>
+
+workflow weekly_cycle(site):
+    A14.report(site, role=INVESTOR)                    <span class="cm"># сводка, при подключении — данные Sustainability</span>
+    A14.report(site, role=SUPERVISION)
+
+<span class="cm"># 2. Реалтайм: хореография через шину (каждая строка — подписка агента)</span>
+on site.frame.sanitized  → A3.detect
+on vision.detection      → A5.update_progress, A6.update_ledger, A9.crosscheck_if_crack
+on progress.deviation    → A12.propose, A13.route
+on weather.risk          → A12.propose, A11.join, A13.route
+on worker.state          → A8.assess
+on heat.risk(level ≥ warn)       → A13.route(worker, supervisor)
+on sos | fall | no_motion        → A13.route(supervisor, ehs)       <span class="cm"># минуя аналитику</span>
+on structure.risk                → A13.route(engineer, manager, require_ack=true)
+on fusion.risk(level ≥ high)     → A12.propose, A13.route
+on plan.approved                 → A15.write_back
+on material.ledger               → A10.recalculate
+on *                             → A16.record
+
+<span class="cm"># 3. Правила, общие для всех обработчиков</span>
+every handler:
+    idempotent(event_id)
+    if input.confidence &lt; threshold: emit(needs_review)
+    if source.silent &gt; timeout:      emit(no_signal | stale | unverified)
+    emit(output, causation_id=input.event_id)          <span class="cm"># цепочка причин для аудита</span></code></pre>
+    <p class="note" style="margin-top:12px;">Оркестратор нужен только там, где процесс долгий и ждёт человека. Если он упал, алерты продолжают идти по шине. Если замолчал критичный агент (A8, A9, A13), оркестратор переводит объект в состояние <span class="mono">degraded</span> и сообщает людям.</p>
+  </div>
+</section>
+
+<section id="scenarios">
+  <div class="wrap">
+    <h2>Как цепочка работает на примерах</h2>
+    <p class="lead">Пять сквозных сценариев. Названия агентов кликабельны: откроется карточка.</p>
+    <div class="tabs" id="scTabs" role="tablist" aria-label="Сценарии"></div>
+    <div class="tabpanel" id="scPanel" role="tabpanel"></div>
+  </div>
+</section>
+
+<section id="contracts">
+  <div class="wrap">
+    <h2>Контракты данных</h2>
+    <p class="lead">Все агенты говорят на одном конверте. Меняется только <span class="mono">payload</span>. Примеры ниже иллюстративные: поля показывают принцип, а не финальную схему.</p>
+    <div class="tabs" id="ctTabs" role="tablist" aria-label="Примеры событий"></div>
+    <div class="tabpanel" id="ctPanel" role="tabpanel" style="padding:0;"></div>
+
+    <h3 style="margin-top:36px;">Топики шины</h3>
+    <p class="note">Классы приватности: <b>P0</b> публичное или агрегат, <b>P1</b> операционные данные объекта, <b>P2</b> привязано к человеку, <b>P3</b> особая категория (здоровье, биометрия). Классификация и сроки хранения: <span class="tag prop">предложение</span></p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Топик</th><th>Публикует</th><th>Читают</th><th>Класс</th><th>Хранение</th></tr></thead>
+        <tbody>
+          <tr><td class="m">project.reference_model</td><td>A1</td><td>все агенты</td><td>P1</td><td>все версии модели</td></tr>
+          <tr><td class="m">site.frame.sanitized</td><td>A2</td><td>A3</td><td>P1, лица размыты</td><td>короткий TTL по политике</td></tr>
+          <tr><td class="m">vision.detection</td><td>A3</td><td>A5, A6, A9, A11</td><td>P1</td><td>около 30 дней; клип-доказательство 60–90</td></tr>
+          <tr><td class="m">worker.state</td><td>A4</td><td>A8 (индивидуально), A11 (агрегат)</td><td>P3</td><td>минимум, только при согласии</td></tr>
+          <tr><td class="m">progress.state, progress.deviation</td><td>A5</td><td>A11, A12, A13, A14</td><td>P1</td><td>на срок проекта</td></tr>
+          <tr><td class="m">material.ledger, material.mismatch</td><td>A6</td><td>A10, A11, A13</td><td>P1</td><td>на срок проекта</td></tr>
+          <tr><td class="m">weather.risk</td><td>A7</td><td>A11, A12, A13</td><td>P0</td><td>на срок проекта</td></tr>
+          <tr><td class="m">heat.risk</td><td>A8</td><td>A13 (индивидуально), A11 (агрегат по бригаде)</td><td>P3 индивидуально, P2 агрегат</td><td>по согласию и политике</td></tr>
+          <tr><td class="m">structure.risk</td><td>A9</td><td>A13</td><td>P1</td><td>на срок проекта и дольше (доказательства)</td></tr>
+          <tr><td class="m">carbon.ledger</td><td>A10</td><td>A11, A14</td><td>P1</td><td>на срок отчётности</td></tr>
+          <tr><td class="m">fusion.risk</td><td>A11</td><td>A12, A13, A14</td><td>P2</td><td>по политике</td></tr>
+          <tr><td class="m">plan.proposal, plan.approved</td><td>A12</td><td>A13, A15</td><td>P1</td><td>на срок проекта</td></tr>
+          <tr><td class="m">alert.dispatched, alert.ack</td><td>A13</td><td>A16, A5 (разметка)</td><td>P2</td><td>в журнале аудита</td></tr>
+          <tr><td class="m">report.generated</td><td>A14</td><td>пользователи по ролям</td><td>по роли</td><td>на срок проекта</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="catalog">
+  <div class="wrap">
+    <h2>Каталог агентов</h2>
+    <p class="lead">Сводная таблица. Строка открывает полную карточку.</p>
+    <div class="tbl-wrap">
+      <table id="catTable">
+        <thead><tr><th>Агент</th><th>Что делает</th><th>Триггер</th><th>Режим работы</th><th>С фазы</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <h3 style="margin-top:34px;">Где LLM можно, а где нельзя</h3>
+    <div class="rules" style="border-top:1px solid var(--ink);margin-top:10px;">
+      <div class="rule"><dt>Допустимо</dt><dd><b>A1</b> предлагает маппинг колонок и классов работ, правила проверяют. <b>A12</b> и <b>A14</b> пишут текст по уже посчитанным полям. Везде схема ответа строго задана, каждое число и факт в тексте должны быть найдены в событиях-источниках, а у утверждения есть <span class="mono">event_id</span>.</dd></div>
+      <div class="rule"><dt>Запрещено</dt><dd><b>A2</b> (политика приватности должна быть проверяема юристом), <b>A8</b> (расчёт риска теплового стресса), <b>A9</b> (структурные риски), <b>A13</b> (маршрутизация алертов). На критичном пути нет вызовов, задержка и поведение которых нельзя гарантировать.</dd></div>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <h2>Стек и развёртывание</h2>
+    <p class="lead">Это <span class="tag prop">предложение</span>, а не решение. Выбор конкретных продуктов остаётся за технической командой. Из сводки взяты только оборудование, цены на него и модель LocateAnything-3B.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Слой</th><th>Что предлагается</th><th>Зачем</th></tr></thead>
+        <tbody>
+          <tr><td><b>Edge</b></td><td>Промышленные IP67-камеры и умные каски; шлюз на площадке: отсев пустых кадров, размытие лиц, буфер на случай потери связи.</td><td>Снижает облачные расходы и держит приватность до выхода данных с площадки. Под жару ОАЭ в сводке упомянут диапазон камер до +70°C.</td></tr>
+          <tr><td><b>Транспорт</b></td><td>Видео: RTSP/WebRTC до шлюза. Датчики носимых и SHM: MQTT. События: шина с журналом (кандидаты: NATS JetStream или Kafka).</td><td>Шина с журналом даёт воспроизводимость и повтор обработки после сбоя.</td></tr>
+          <tr><td><b>Хранилища</b></td><td>Объектное хранилище для клипов (около 30 дней, 60–90 для доказательств). БД временных рядов для носимых и датчиков. Реляционная БД с геоданными для эталонной модели и зон. Журнал аудита с хэш-цепочкой.</td><td>Разные типы данных, разные сроки и требования приватности.</td></tr>
+          <tr><td><b>Инференс</b></td><td>Пул GPU. Детектор: кандидат NVIDIA LocateAnything-3B (открытая, работает на одной GPU, без внешнего API). Реестр моделей, теневой запуск новых версий.</td><td>Сводка называет модель, но её качество на кадрах стройплощадки, пыли и жаре нужно проверить на пилоте.</td></tr>
+          <tr><td><b>Оркестрация</b></td><td>Workflow-движок для долгих процессов (кандидат: Temporal). Хореография через шину для реалтайма.</td><td>Долгие ожидания людей и повторы не должны держать процессы в памяти.</td></tr>
+          <tr><td><b>Агентный рантайм (LLM)</b></td><td>Строгие JSON-схемы ответов, свой список разрешённых инструментов на агента, автоматическая проверка «число есть в источнике».</td><td>Ограничивает LLM ролью переводчика готовых данных в текст.</td></tr>
+          <tr><td><b>Безопасность</b></td><td>Движок политик (кандидат: OPA), KMS, изоляция клиентов, ролевой доступ: подрядчик, надзор, EHS, инвестор, покупатель.</td><td>Роли совпадают с описанными в сводке пользователями.</td></tr>
+          <tr><td><b>Наблюдаемость</b></td><td>Трассировка по <span class="mono">correlation_id</span> от кадра или датчика до алерта; метрики качества моделей по каждому объекту; heartbeat агентов.</td><td>Можно ответить «почему сработало» и «почему не сработало».</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 style="margin-top:34px;">Как проверять качество</h3>
+    <div class="rules" style="border-top:1px solid var(--ink);margin-top:10px;">
+      <div class="rule"><dt>Теневой режим</dt><dd>Новая версия модели или порога работает параллельно, результаты сравниваются с текущей и с разметкой людей. В продуктив идёт после сравнения.</dd></div>
+      <div class="rule"><dt>Выборка по каждому объекту</dt><dd>Качество Vision и Progress измеряем на размеченных кадрах конкретной площадки и климата, а не только на общих бенчмарках.</dd></div>
+      <div class="rule"><dt>Разметка из работы</dt><dd>Каждое подтверждение или отклонение алерта человеком (A13, A16) становится меткой для калибровки порогов и моделей.</dd></div>
+      <div class="rule"><dt>Целевые значения</dt><dd>Конкретные пороги точности и задержек определяем на пилоте. До него цифры были бы выдуманными; метрики по каждому агенту перечислены в его карточке.</dd></div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <h2>Юридические ограничения и как они влияют на архитектуру</h2>
+    <p class="lead">Ограничения из сводки превращены в конкретные требования к агентам. Это не юридическое заключение: применимость нужно подтвердить у юристов.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Ограничение (из сводки)</th><th>Решение в архитектуре</th></tr></thead>
+        <tbody>
+          <tr><td>UAE PDPL: уведомление сотрудников о наблюдении и законное основание обработки.</td><td>A2 перед запуском камеры или зоны проверяет, что уведомление и основание зарегистрированы. Без них поток от этой камеры не стартует.</td></tr>
+          <tr><td>GDPR: «законный интерес» и обязательная DPIA; практика снижения риска: анонимизация лиц там, где важен только факт действия.</td><td>Размытие лиц по умолчанию на edge. Пакет документов для DPIA собирается из журнала A2 и A16 (фаза 3).</td></tr>
+          <tr><td>Физиологические данные: GDPR ст. 9, явное согласие; UAE PDPL требует уведомления и согласия.</td><td>Реестр согласий в A2. Без согласия A4 не пишет данные работника. A11 получает только агрегат по бригаде или зоне.</td></tr>
+          <tr><td>Ответственность за автоматический алерт по структурным рискам; ст. 53 Строительного кодекса Дубая (требуется проверка юриста).</td><td>В фазе 3 нет авто-действий: алерт идёт людям, человек подтверждает. A16 фиксирует всё. Авто-эвакуация включается только после юридического заключения.</td></tr>
+          <tr><td>ISO 45001: тепловой стресс должен быть выявлен, оценён и документально контролироваться.</td><td>A8 считает риск, A13 доставляет алерт, A16 хранит доказательство, что оценка и реакция были.</td></tr>
+          <tr><td>Доказательная база требует хранения 60–90 дней, а минимизация данных требует хранить меньше.</td><td>Короткий TTL по умолчанию. Клип с метаданными сохраняется надолго только по спорному событию и только в пакете доказательств (A16).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="phases">
+  <div class="wrap">
+    <h2>Что выпускаем в каждой фазе</h2>
+    <p class="lead">Фазы повторяют roadmap Lynx Vision. У HealthPulse свой roadmap (V1.0 → V3.0): его базовые агенты A4 и A8 можно запускать отдельным пилотом на 1–2 объектах, а полноценная связка с Lynx Vision приходит только в Ф4.</p>
+    <div id="phaseRows"></div>
+  </div>
+</section>
+
+<section id="open">
+  <div class="wrap">
+    <h2>Решения, которые нужны от технической команды</h2>
+    <p class="lead">Часть вопросов взята из сводки, часть возникла при проектировании цепочки.</p>
+    <div class="qs">
+      <div class="q"><div><h3>Критические элементы для пилота структурных рисков</h3><p>Нужен перечень колонн и балок от структурного инженера. Без него A9 не с чего начинать.</p></div><span class="tag">из сводки</span></div>
+      <div class="q"><div><h3>Цены и форматы данных SHM-оборудования</h3><p>Запросить у Sixense, Senceive, Worldsensing, Resensys цены и API. Адаптеры A9 зависят от форматов.</p></div><span class="tag">из сводки</span></div>
+      <div class="q"><div><h3>HealthPulse: партнёр или своё устройство</h3><p>Решение влияет только на слой адаптеров A4: интеграция с Kenzen или SlateSafety либо собственная прошивка и телеметрия. Остальная цепочка не меняется.</p></div><span class="tag">из сводки</span></div>
+      <div class="q"><div><h3>Lynx Vision: SaaS или своё оборудование</h3><p>SaaS проще для входа клиента, а hardware + SaaS даёт контроль качества данных, то есть качества входа для A3. Влияет на то, сколько обработки можно перенести на edge.</p></div><span class="tag">из сводки</span></div>
+      <div class="q"><div><h3>Методология Sustainability</h3><p>Источники данных о материалах, коэффициенты выбросов и владелец функции. Пока это не определено, A10 остаётся каркасом.</p></div><span class="tag">из сводки</span></div>
+      <div class="q"><div><h3>Юридическая проверка авто-алертов</h3><p>Применимость ст. 53 Строительного кодекса Дубая и вопрос ответственности. От ответа зависит, когда в A9 и A13 можно включить авто-эвакуацию.</p></div><span class="tag">из сводки</span></div>
+      <div class="q"><div><h3>Где работает LLM и где хранятся данные</h3><p>Видео и данные здоровья очень чувствительны. Нужно решить: собственное размещение или внешний API, и в какой юрисдикции хранятся данные клиентов. Проверить требования к локализации и трансграничной передаче.</p></div><span class="tag prop">добавлено</span></div>
+      <div class="q"><div><h3>Качество LocateAnything-3B на стройплощадке</h3><p>Сводка называет модель кандидатом, но не проверяет её на реальных кадрах. Нужен замер на размеченных данных пилотных объектов, включая кадры с каски.</p></div><span class="tag prop">добавлено</span></div>
+      <div class="q"><div><h3>Модель мультиарендности</h3><p>Как изолируются клиенты и как строится портфельный дашборд для инвесторов поверх нескольких объектов без смешивания данных.</p></div><span class="tag prop">добавлено</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Рабочий материал для обсуждения с технической командой. Основа: сводка по Lynx Vision, HealthPulse и Sustainability. Всё помеченное как «предложение» — архитектурные идеи, а не факты из сводки.</div>
+</footer>
+
+<aside id="sheet" role="dialog" aria-label="Карточка агента" aria-modal="false"></aside>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const PHASES = [
+  {p:1, label:'Ф1', months:'мес 1–4',   name:'MVP',        desc:'Ручная загрузка графика и сметы, пилот на 1–3 объектах, базовый мониторинг и уведомления.'},
+  {p:2, label:'Ф2', months:'мес 5–9',   name:'Расширение', desc:'Погодозависимое планирование, роль надзорной компании, уточнение алгоритма отклонений.'},
+  {p:3, label:'Ф3', months:'мес 10–15', name:'Интеграции', desc:'Primavera P6, Aconex, FirstBit, первая связка с Sustainability, пилот структурных рисков без авто-эвакуации.'},
+  {p:4, label:'Ф4', months:'мес 16–24', name:'Зрелость',   desc:'Связка с HealthPulse, портфельный дашборд, предиктивная аналитика, полная шкала структурных рисков с авто-эвакуацией.'}
+];
+
+const PROD = {
+  lynx:  {name:'Lynx Vision',    c:'var(--lynx)'},
+  pulse: {name:'HealthPulse',    c:'var(--pulse)'},
+  leaf:  {name:'Sustainability', c:'var(--leaf)'},
+  core:  {name:'Общая платформа',c:'var(--steel)'}
+};
+
+const AG = [
+{
+  id:'A0', name:'Orchestrator', sub:'долгие процессы и состояние объекта', ru:'Оркестратор', prod:'core', mode:['workflow'],
+  role:'Запускает и ведёт долгие процессы (подключение объекта, ежедневный и недельный циклы) и следит за здоровьем цепочки. Реалтайм-события он не маршрутизирует: они идут по шине напрямую между агентами.',
+  trigger:'Расписание, загрузка файлов, смена состояния объекта, пропавший heartbeat агента.',
+  inputs:['статусы и heartbeat агентов','расписания объектов','команды и подтверждения пользователей'],
+  outputs:['запуск workflow','состояние объекта: draft, model_confirmed, hardware_ready, monitoring, degraded','эскалация при сбое агента'],
+  logic:['Ведёт конечный автомат объекта: draft → model_confirmed → hardware_ready → monitoring → degraded.','Запускает ежедневный цикл: утренняя сводка, дневной мониторинг, вечерняя сверка.','Если критичный агент (A8, A9, A13) перестал слать heartbeat, переводит объект в degraded и уведомляет людей. Тишина не должна выглядеть как «всё спокойно».','Не стоит на пути A8 и A9 к A13: решений по безопасности не принимает.'],
+  tech:['Workflow-движок для долгих процессов (кандидат: Temporal).','Реалтайм: хореография через шину, без центрального маршрутизатора.'],
+  hitl:'Подтверждение эталонной модели клиентом: обязательные ворота перед monitoring.',
+  fail:'Падение оркестратора не останавливает реалтайм-контур: алерты идут по шине.',
+  metrics:['доля объектов в состоянии degraded','время обнаружения сбоя агента'],
+  rollout:[{p:1,t:'Конечный автомат объекта, ежедневный цикл, heartbeat'},{p:3,t:'Расписания по нескольким объектам'},{p:4,t:'Портфельные и предиктивные задачи'}]
+},
+{
+  id:'BUS', name:'Шина событий', sub:'', ru:'Шина событий', prod:'core', mode:['инфраструктура'],
+  role:'Единый журнал типизированных событий. Все агенты публикуют результаты и подписываются на нужные топики. Агент не знает, кто читает его события.',
+  trigger:'Любая публикация события.',
+  inputs:['события от всех агентов'],
+  outputs:['доставка подписчикам','воспроизведение истории для повторной обработки и отладки'],
+  logic:['Все события в общем конверте: event_id, type, schema_version, site_id, ts, producer, privacy_class, purpose, ttl_days, correlation_id, causation_id, confidence, payload.','Схемы версионируются; несовместимое изменение — новая major-версия топика, старая живёт параллельно.','Доставка «как минимум один раз», поэтому все обработчики идемпотентны по event_id.','Политика приватности (A2) применяется на публикации: событие с классом P3 читают только разрешённые подписчики.'],
+  tech:['Кандидаты: NATS JetStream или Kafka. Выбор зависит от объёма видео-метаданных и опыта команды. Предложение.','Реестр схем и контрактные тесты производителей и потребителей.'],
+  hitl:'—',
+  fail:'Если шина недоступна, edge-шлюз буферизует события и критичные алерты работают через резервный канал.',
+  metrics:['задержка публикации до доставки','длина очереди по топикам','доля событий, не прошедших валидацию схемы'],
+  rollout:[{p:1,t:'Базовые топики, реестр схем'},{p:3,t:'Контрактные тесты для интеграций'}]
+},
+{
+  id:'A1', name:'Plan Parser', sub:'график и смета в модель', ru:'Разбор плана', prod:'core', mode:['правила','LLM'],
+  role:'Превращает загруженные график и смету в эталонную модель проекта: с ней потом сравнивается всё, что видят камеры.',
+  trigger:'Загрузка файла (Excel, PDF, CSV) через интерфейс Lynx Vision; позже синхронизация с Primavera P6.',
+  ext:'файлы клиента',
+  inputs:['график работ','смета (BOQ)','геолокация объекта','схема зон площадки, если есть'],
+  outputs:['ReferenceModel: задачи WBS (даты, зависимости, объёмы)','BOQ материалов','зоны площадки','класс погодной чувствительности каждой задачи','ожидаемые визуальные признаки этапа'],
+  logic:['Извлечь таблицы из Excel и CSV; для PDF табличное извлечение и OCR.','Сопоставить колонки с канонической схемой (название, старт, финиш, объём, единица измерения). LLM предлагает маппинг, правила проверяют: даты монотонны, зависимости без циклов, суммы сходятся со сметой.','Назначить каждой задаче класс погодной чувствительности (бетон, работы на высоте, внутренняя отделка и т.д.) по справочнику; LLM только для неоднозначных названий.','Показать клиенту сводку и вопросы по неоднозначным строкам. Без подтверждения модель не активируется.'],
+  tech:['Парсеры xlsx и csv; для PDF извлечение таблиц и OCR.','LLM только для маппинга и классификации, ответ строго по JSON-схеме.','Версионирование: любое изменение графика создаёт новую версию, старые сохраняются.'],
+  hitl:'Клиент подтверждает модель. Это ворота перед запуском мониторинга.',
+  fail:'Неоднозначные строки не угадываются: они уходят клиенту как вопросы.',
+  metrics:['доля строк, смапленных без вопросов клиенту','число правок после подтверждения'],
+  rollout:[{p:1,t:'Ручная загрузка Excel, PDF, CSV'},{p:3,t:'Импорт и синхронизация с Primavera P6, Aconex, FirstBit (через A15)'}]
+},
+{
+  id:'A2', name:'Privacy Guard', sub:'шлюз приватности', ru:'Шлюз приватности', prod:'core', mode:['правила'],
+  extra:['лица → размытие','уведомления, основание','согласия на данные здоровья','цель обработки и TTL','роли доступа','при сбое — закрыто'],
+  role:'Шлюз между сырыми данными и всей остальной цепочкой. До него данные «грязные» (лица, биометрия), после него разрешены для конкретной цели.',
+  trigger:'Каждый кадр и пакет телеметрии.',
+  inputs:['видеокадры','телеметрия носимых','реестр согласий и уведомлений','роли пользователей','политика объекта: юрисдикция, сроки хранения'],
+  outputs:['очищенный поток с меткой цели и класса приватности','решения: разрешить, запретить, преобразовать','записи в журнал (A16)'],
+  logic:['Проверить, что уведомление сотрудников и законное основание зарегистрированы для этой камеры или зоны (UAE PDPL, GDPR).','Размыть или псевдонимизировать лица там, где важен только факт действия.','Для физиологических данных проверить явное согласие (GDPR ст. 9, UAE PDPL). Без согласия данные дальше устройства не идут.','Проставить цель (purpose) и TTL; потребитель вне цели получает отказ.','Применить ролевой доступ: подрядчик, надзор, EHS, инвестор, покупатель видят разное.'],
+  tech:['Размытие лиц на edge, до выхода данных с площадки.','Движок политик (кандидат: OPA): правила в коде, версионируются, проходят ревью.','Без LLM: поведение должно быть проверяемым юристом.'],
+  hitl:'Правила политики утверждает юрист или DPO. Изменение только через ревью.',
+  fail:'Fail-closed: при сбое политики данные дальше не передаются.',
+  metrics:['доля кадров с корректной анонимизацией (выборочный аудит)','число отказов по политике','время применения отзыва согласия'],
+  rollout:[{p:1,t:'Анонимизация лиц, уведомления, роли, TTL'},{p:2,t:'Реестр согласий для HealthPulse'},{p:3,t:'Пакет документов для DPIA (Европа)'}]
+},
+{
+  id:'A3', name:'Vision', sub:'кадры в наблюдения', ru:'Компьютерное зрение', prod:'lynx', mode:['CV-модель'],
+  ext:'камеры, каски',
+  role:'Глаза системы. Превращает видео с камер и касок в структурированные наблюдения: этап работ, техника, материалы, присутствие людей.',
+  trigger:'Поток кадров по расписанию съёмки и по движению; запрос от других агентов уточнить зону.',
+  inputs:['очищенные кадры (A2)','ReferenceModel: какие признаки искать','калибровка камер: зона, ракурс'],
+  outputs:['vision.detection: класс, bbox, уверенность, camera_id, zone_id, время, версия модели','счётчики присутствия по зонам без идентификации людей'],
+  logic:['Edge: отсечь пустые кадры по движению и расписанию, чтобы не гнать их в облако.','Детектор с открытым словарём ищет по запросам из ReferenceModel («армирование колонны», «бетономешалка», «поддоны с блоками»).','Привязать детекцию к зоне и времени. Низкая уверенность: needs_review, а не молчаливый отказ.','Трещины на видео — слабый сигнал для A9, самостоятельного вердикта нет.'],
+  tech:['Кандидат: NVIDIA LocateAnything-3B (открытая, одна GPU, без внешнего API). Качество на стройплощадке нужно проверить: пыль, жара, засвет.','Каски (GH01, ZP620G, Hikvision DS-MCH418 и др.) дают вид от первого лица и GPS — другой домен данных, нужен отдельный замер качества.','Реестр моделей, теневой запуск новых версий.'],
+  hitl:'Спорные кадры уходят на ручную разметку; разметка возвращается в обучение через A16.',
+  fail:'Камера офлайн или засвет: событие camera.degraded; A5 не делает выводов по слепой зоне.',
+  metrics:['precision и recall по классам на размеченной выборке объекта','доля кадров, отсечённых на edge','стоимость обработки на камеру (ориентир из сводки: $3–15 облако, $10–30 хранение за 30 дней)'],
+  rollout:[{p:1,t:'Камеры на 1–3 объектах: этапы, материалы, техника, присутствие'},{p:2,t:'Калибровка под климат ОАЭ, режим надзорной компании'},{p:3,t:'Каски, признаки трещин для A9'},{p:4,t:'Портфельные модели, дообучение на накопленной разметке'}]
+},
+{
+  id:'A4', name:'Wearable', sub:'носимые в состояние', ru:'Носимые устройства', prod:'pulse', mode:['адаптеры'],
+  ext:'носимые устройства',
+  note:'Трек HealthPulse: собственный roadmap, пилот на 1–2 объектах может идти независимо от Lynx Vision.',
+  role:'Приводит данные носимых устройств разных производителей к единому формату и отдаёт срочные сигналы напрямую.',
+  trigger:'Телеметрия устройства (BLE, LTE), SOS, событие падения.',
+  inputs:['пульс','температура кожи и тела','скорость потоотделения','акселерометр','GPS','SOS','датчик среды'],
+  outputs:['worker.state с псевдонимом worker_id','события sos, fall, no_motion','качество сигнала'],
+  logic:['Адаптер под каждое устройство (Kenzen, SlateSafety или собственный браслет) приводит данные к единой схеме.','Отбраковать артефакты: браслет снят, плохой контакт, потеря связи.','Привязать устройство к работнику через реестр с согласием (A2). Без согласия данные не писать.','SOS и падение идут сразу в A13, минуя аналитику.'],
+  tech:['Слой адаптеров с контрактными тестами.','БД временных рядов.','Решение «партнёр или своё устройство» меняет только адаптер, остальная цепочка не затрагивается.'],
+  hitl:'—',
+  fail:'Потеря связи не равна норме: no_signal дольше порога превращается в событие для супервайзера.',
+  metrics:['доля валидных измерений за смену','задержка от устройства до события','доля потерь связи'],
+  rollout:[{p:1,t:'Базовые показатели: температура и ЧСС, пилот на 1–2 объектах'},{p:2,t:'SOS, падение, отсутствие движения, геолокация'},{p:3,t:'Единый дашборд с остальной платформой'}]
+},
+{
+  id:'A5', name:'Progress', sub:'факт против плана', ru:'Прогресс', prod:'lynx', mode:['правила','статистика'],
+  role:'Сверяет фактический прогресс с эталонным графиком и находит отклонения.',
+  trigger:'Ежедневный пересчёт и события vision.detection, влияющие на этап.',
+  inputs:['vision.detection (A3)','ReferenceModel (A1)','календарь работ'],
+  outputs:['progress.state: статус задачи, оценка % выполнения, уверенность','progress.deviation: задача, отставание или опережение, причина-кандидат'],
+  logic:['Для каждой активной задачи собрать подтверждающие признаки: этап виден, техника на месте, люди в зоне.','Оценить % выполнения и уверенность. Слепая зона или низкая уверенность: статус unverified.','Сравнить с планом по правилам отклонения. Пороги настраиваются под объект (в roadmap V1.1–1.2 «уточнение алгоритма отклонений»).','Причина-кандидат (нет материалов от A6, погода от A7, нет людей) — гипотеза с источниками, а не вывод.','Алерт только при отклонении, а не при каждом изменении.'],
+  tech:['Правила и простая статистика. ML добавляется после накопления разметки.','LLM не выставляет числа: только формулирует пояснение по готовым полям (через A14).'],
+  hitl:'Надзорная компания может подтвердить или оспорить оценку. Это же разметка для калибровки.',
+  fail:'Нет данных не равно «нет прогресса»: статус unverified, а не «отставание».',
+  metrics:['ошибка % выполнения против ручного замера прораба или надзора','доля ложных отклонений','доля задач в unverified'],
+  rollout:[{p:1,t:'Базовый мониторинг и отклонения'},{p:2,t:'Уточнённый алгоритм отклонений, роль надзора'},{p:4,t:'Предиктивные оценки сроков'}]
+},
+{
+  id:'A6', name:'Materials', sub:'учёт материалов', ru:'Материалы', prod:'lynx', mode:['CV','правила'],
+  role:'Ведёт учёт: что приехало на площадку, куда распределено и где этого не хватает. Журнал логистики — единственный вход для Sustainability.',
+  trigger:'Детекции материалов и транспорта; расписание поставок из BOQ.',
+  inputs:['vision.detection: поддоны, техника, въезды','BOQ из ReferenceModel','ручные отметки и накладные'],
+  outputs:['material.ledger: позиция, оценка количества, зона, время','material.mismatch: материал не там или не вовремя'],
+  logic:['Распознать приход материалов и перемещение по зонам.','Сопоставить с потребностью задач ближайших дней.','Количество — оценка с интервалом; точное значение только из накладных, если они поданы.','Журнал передаётся в A10 и A11.'],
+  tech:['Правила и CV. Позже: распознавание накладных (документный парсер).','Реляционная БД с геопривязкой зон.'],
+  hitl:'Прораб или кладовщик подтверждает спорные позиции.',
+  fail:'Если уверенности нет, количество помечается как estimate с широким интервалом.',
+  metrics:['точность прихода по накладным','доля mismatch, подтверждённых людьми'],
+  rollout:[{p:1,t:'Базовый учёт приходов и перемещений'},{p:3,t:'Подготовка данных для Sustainability, подача накладных'}]
+},
+{
+  id:'A7', name:'Weather Risk', sub:'погода и этапы работ', ru:'Погодные риски', prod:'lynx', mode:['правила'],
+  ext:'погодный API',
+  role:'Заранее находит этапы, которые попадают в погодную зону риска.',
+  trigger:'Обновление прогноза по геолокации объекта и изменение графика.',
+  inputs:['прогноз по геолокации','ReferenceModel: задачи и классы чувствительности','матрица чувствительности'],
+  outputs:['weather.risk: задача, окно времени, параметр (температура, осадки, ветер), уровень, рекомендуемое действие'],
+  logic:['Матрица «класс работ × погодный параметр × порог»: бетон чувствителен к температуре и осадкам, работы на высоте к ветру, внутренняя отделка почти не зависит от погоды.','Пересечь окна прогноза с окнами задач графика.','Для ОАЭ отдельный профиль экстремальной жары.','Отдать A12 для поиска альтернативы и A11 для сопоставления с нагрузкой на людей.'],
+  tech:['Абстракция провайдера прогноза: источник заменяется без правок логики.','Матрица чувствительности — версионируемая конфигурация, которую правит технолог.'],
+  hitl:'Технолог утверждает пороги матрицы.',
+  fail:'Прогноз недоступен: используется последний с пометкой stale, а не тишина.',
+  metrics:['доля предупреждений, подтвердившихся фактической погодой','заблаговременность предупреждения'],
+  rollout:[{p:2,t:'Погодозависимое планирование'},{p:4,t:'Связка с нагрузкой на людей через A11'}]
+},
+{
+  id:'A8', name:'Heat Stress', sub:'тепловой стресс', ru:'Тепловой стресс', prod:'pulse', mode:['физ. модель','правила'],
+  ext:'датчик среды',
+  note:'Трек HealthPulse: собственный roadmap. Связка с Lynx Vision появляется в Ф4 (через A11).',
+  role:'Оценивает риск теплового стресса и обезвоживания по каждому работнику и бригаде до появления симптомов.',
+  trigger:'Каждое обновление worker.state; изменение условий среды.',
+  inputs:['worker.state (A4)','условия среды: датчик или прогноз','индивидуальные пороги','режим работа/отдых'],
+  outputs:['heat.risk: уровни по работнику и по бригаде','алерт работнику и супервайзеру','рекомендации: отдых, вода, снять с задачи'],
+  logic:['Оценить расчётную температуру тела и накопленную нагрузку по пульсу, активности, потоотделению и среде (аналог индекса WBGT).','Сравнить с порогами объекта (настраиваются) и индивидуальной динамикой.','Повышение уровня: алерт работнику (вибрация) и супервайзеру.','Агрегировать по бригаде. Руководители видят агрегат; индивидуальные значения только EHS и супервайзер по роли.'],
+  tech:['Детерминированный расчёт, версионируется. LLM в контуре алерта нет.','Валидация модели на данных поставщика устройства до пилота.'],
+  hitl:'Супервайзер решает: отдых, вода, снять с задачи.',
+  fail:'Нет данных или устройство снято: алерт no_signal, а не «в норме».',
+  metrics:['заблаговременность алерта относительно симптомов (по итогам пилота)','доля ложных алертов','время от алерта до реакции'],
+  rollout:[{p:1,t:'Алерты по температуре и ЧСС'},{p:2,t:'Настраиваемые пороги под площадку, одиноко работающие'},{p:3,t:'Аналитика по бригаде, общий дашборд'},{p:4,t:'Связка с Lynx Vision: локация и время на открытом участке'}]
+},
+{
+  id:'A9', name:'Structural', sub:'датчики конструкций', ru:'Структурные риски', prod:'lynx', mode:['пороги','аномалии'],
+  ext:'SHM-датчики',
+  role:'Следит за состоянием критических конструкций и предупреждает о риске.',
+  trigger:'Поток датчиков (трещиномеры, вибрация, наклон) и слабые сигналы Vision.',
+  inputs:['SHM-датчики','перечень инструментируемых элементов от структурного инженера','vision-признаки трещин (слабый сигнал)','нормативные пороги'],
+  outputs:['structure.risk: sensor_id, элемент, нагрузка %, частота Гц, уровень, уверенность'],
+  logic:['Работает только по элементам из перечня структурного инженера. Без перечня пилота нет.','Пороги и аномалии по временным рядам; видео — только подтверждающий сигнал.','Уровни: наблюдение, предупреждение, критично.','Ф3: только предупреждения людям. Ф4: авто-эвакуация, после юридической проверки и накопленной статистики.'],
+  tech:['Данные поставщиков (Sixense, Senceive, Worldsensing, Resensys): форматы и цены ещё не получены.','Временные ряды и пороговые правила. ML для аномалий — позже.'],
+  hitl:'Любой уровень «критично» в Ф3 подтверждает инженер. Автоматические действия отключены.',
+  fail:'Датчик молчит: событие sensor.offline с повышенным приоритетом.',
+  metrics:['пропуски (false negative) на тестовых или имитированных событиях','ложные срабатывания за смену','задержка от датчика до алерта'],
+  open:'Перечень критических элементов; цены SHM; применимость ст. 53 Строительного кодекса Дубая и ответственность за автоматический алерт.',
+  rollout:[{p:3,t:'Пилот без авто-эвакуации'},{p:4,t:'Полная шкала рисков с авто-эвакуацией'}]
+},
+{
+  id:'A10', name:'Carbon', sub:'CO₂e материалов', ru:'Углеродный след', prod:'leaf', mode:['расчёт'],
+  ext:'коэффициенты выбросов',
+  role:'Считает углеродный след материалов по данным о логистике и готовит данные для экологической отчётности.',
+  trigger:'Обновление material.ledger; конец периода отчётности.',
+  inputs:['material.ledger (A6)','коэффициенты выбросов (источник не выбран)','требования отчётности'],
+  outputs:['carbon.ledger: кг CO₂e по материалу, этапу, зоне','данные для экологического отчёта'],
+  logic:['Количество материала × коэффициент выбросов = след. Интервал неопределённости переходит из A6.','Транспорт и распределение по площадке отдельная статья, если данные позволяют.','Показывать, откуда число: из накладных или из оценки по камере.'],
+  tech:['Справочник коэффициентов с версиями и источниками. Выбор источника открыт.','Детерминированный расчёт. LLM только в тексте отчёта (через A14).'],
+  hitl:'Эколог или владелец методологии утверждает коэффициенты.',
+  fail:'Для материала нет коэффициента: позиция помечается, а не заменяется «средним».',
+  metrics:['доля позиций с подтверждённым коэффициентом','расхождение с накладными'],
+  open:'Методология, источники данных о материалах, коэффициенты, владелец функции, юридический раздел, монетизация — в сводке не проработаны.',
+  rollout:[{p:3,t:'Первая связка с данными Lynx Vision'},{p:4,t:'Отчёты под UAE Net Zero 2050'}]
+},
+{
+  id:'A11', name:'Fusion', sub:'связка продуктов', ru:'Связка данных', prod:'core', mode:['потоковый join','правила'],
+  extra:['ключи: site, zone,','task, окно времени','индивидуальное здоровье','не попадает сюда,','только агрегаты'],
+  role:'Единственное место, где данные разных продуктов объединяются. Ради этого строится единая платформа вместо трёх отдельных решений.',
+  trigger:'Любое состояние или событие риска в окне (длина окна — параметр).',
+  inputs:['progress.state','weather.risk','heat.risk (агрегат по бригаде)','присутствие по зонам (A3)','GPS и время на участке (A4)','material.ledger','carbon.ledger'],
+  outputs:['fusion.risk: связка «задача × погода × нагрузка на людей × время в зоне»','кросс-продуктовые выводы'],
+  logic:['Ключи соединения: site_id, zone_id, task_id, временное окно.','Пример: бетонная заливка запланирована на жаркое окно (A7), бригада долго на открытой зоне (A3, A4), растёт heat.risk (A8). Это повышенный риск и для плана, и для людей.','Приватность: индивидуальные физиологические данные сюда не попадают, только агрегат по бригаде или зоне, если нет явного основания.','Передаёт A12 готовый контекст для вариантов.'],
+  tech:['Потоковое соединение по ключам, правила в конфигурации.','Предиктивные модели только после накопления истории пилотов.'],
+  hitl:'—',
+  fail:'Если источника не хватает, fusion.risk выходит с пометкой «неполные данные», а не молча игнорирует его.',
+  metrics:['доля fusion-рисков, подтверждённых людьми','время от первого сигнала до объединённого события'],
+  rollout:[{p:3,t:'Первая связка: материалы, углерод и график'},{p:4,t:'Связка HealthPulse и Lynx Vision, портфельный дашборд'}]
+},
+{
+  id:'A12', name:'Replanner', sub:'варианты плана', ru:'Перепланирование', prod:'core', mode:['солвер','LLM'],
+  role:'Предлагает варианты корректировки плана. Решение принимает человек.',
+  trigger:'progress.deviation, weather.risk, fusion.risk.',
+  inputs:['ReferenceModel: зависимости, ресурсы','события риска','ограничения клиента'],
+  outputs:['plan.proposal: варианты (сдвиг этапа, смена последовательности, режим работа/отдых) с влиянием на сроки и риски','plan.approved после решения человека'],
+  logic:['Построить 2–3 допустимых варианта в рамках зависимостей.','Оценить последствия: срок, погодный риск, нагрузка на людей.','LLM пишет понятное объяснение для прораба по готовым полям; числа берутся из солвера.','Ничего не записывается во внешние системы без явного одобрения.'],
+  tech:['Планирование с ограничениями: солвер (кандидат: OR-Tools CP-SAT).','LLM только для пояснений и с обязательными ссылками на event_id.'],
+  hitl:'Прораб или менеджер проекта выбирает вариант.',
+  fail:'Допустимого варианта нет: агент сообщает об этом и показывает нарушенные ограничения.',
+  metrics:['доля принятых предложений','расхождение предсказанного и фактического эффекта'],
+  rollout:[{p:2,t:'Предложения по погоде и отклонениям'},{p:3,t:'Запись одобренного плана в P6, Aconex, FirstBit через A15'},{p:4,t:'Учёт нагрузки на людей'}]
+},
+{
+  id:'A13', name:'Alert Router', sub:'кому, когда, как', ru:'Маршрутизатор алертов', prod:'core', mode:['правила'],
+  role:'Решает, кого, когда и как предупредить, и следит, чтобы алерт не потерялся.',
+  trigger:'Любое событие отклонения, риска, SOS.',
+  inputs:['события риска от агентов','роли','графики смен','цепочки эскалации'],
+  outputs:['alert.dispatched','alert.ack','alert.escalated'],
+  logic:['Приоритет: sos и structure.critical выше heat, выше weather, materials и progress.','Дедупликация и склейка однотипных событий; бюджет шума на роль (по сводке уведомления идут только при отклонениях).','Каналы: вибрация устройства, push, SMS, дашборд; разные для разных уровней.','Эскалация по таймеру: работник, супервайзер, EHS, руководство — пока нет подтверждения.','Структурные: до юридического решения автоматических действий нет, алерт идёт людям.'],
+  tech:['Правила и таблицы эскалации в конфигурации.','Без LLM: критичный путь с предсказуемой задержкой.'],
+  hitl:'Подтверждение человека закрывает цепочку; его отсутствие запускает эскалацию.',
+  fail:'Канал недоступен: переключение на запасной, всё фиксируется в A16.',
+  metrics:['время от события до доставки','время до подтверждения','доля эскалаций','число алертов на человека за смену'],
+  rollout:[{p:1,t:'Дневные уведомления об отклонениях'},{p:2,t:'Роли: прораб, надзор, EHS'},{p:3,t:'Структурные алерты без авто-эвакуации'},{p:4,t:'Авто-эвакуация (после юридической проверки)'}]
+},
+{
+  id:'A14', name:'Report', sub:'сводки по ролям', ru:'Отчёты', prod:'core', mode:['LLM','шаблоны'],
+  role:'Собирает понятные сводки под каждую роль на основе готовых данных.',
+  trigger:'Утро каждого дня, конец недели и месяца, запрос пользователя.',
+  inputs:['состояния и события всех агентов','роль получателя'],
+  outputs:['report.generated: утренняя сводка прорабу, проверочный вид надзору, отчёт инвестору, поток Buyer View'],
+  logic:['Числа и факты берутся только из событий; LLM формулирует текст.','У каждого утверждения есть ссылка на event_id или клип: проверяемость.','Buyer View: живой вид и таймлапс общего плана без детальной съёмки рабочих зон (через A2).','Недельный и месячный отчёт, при подключении с данными для Sustainability.'],
+  tech:['Шаблоны и LLM со строгой схемой; автоматическая проверка: все числа в тексте есть в источнике.','Размещение LLM решить с учётом приватности (см. открытые вопросы).'],
+  hitl:'Отчёт инвестору и надзору можно просматривать перед отправкой.',
+  fail:'Данных за период нет: отчёт так и говорит, без правдоподобных заполнений.',
+  metrics:['доля утверждений с источником','доля правок человеком'],
+  rollout:[{p:1,t:'Утренняя сводка'},{p:2,t:'Вид для надзорной компании'},{p:3,t:'Сводные отчёты, Buyer View'},{p:4,t:'Портфельный дашборд'}]
+},
+{
+  id:'A15', name:'Integration', sub:'P6 / Aconex / FirstBit', ru:'Интеграции', prod:'core', mode:['коннекторы'],
+  ext:'P6, Aconex, FirstBit',
+  role:'Двусторонняя связь с внешними системами проекта.',
+  trigger:'Изменения в Primavera P6, Aconex, FirstBit; одобренный plan.approved.',
+  inputs:['внешние графики и документы','plan.approved'],
+  outputs:['обновление ReferenceModel','запись одобренного плана','документы во внешние системы'],
+  logic:['Отдельный коннектор на каждую систему, общий канонический формат.','Идемпотентность: повторный запрос не создаёт дубликатов.','Конфликт версий решает человек; агент не перезаписывает чужие правки.','Запись во внешние системы только по plan.approved.'],
+  tech:['Коннекторы по API или файловому обмену, контрактные тесты.','Очередь с повторами и dead-letter.'],
+  hitl:'Конфликты версий и ручное одобрение записи.',
+  fail:'Внешняя система недоступна: очередь, повторные попытки, уведомление.',
+  metrics:['доля успешных синхронизаций','время расхождения моделей'],
+  rollout:[{p:3,t:'Primavera P6, Aconex, FirstBit'}]
+},
+{
+  id:'A16', name:'Audit & Evidence', sub:'', ru:'Журнал и доказательства', prod:'core', mode:['правила'],
+  role:'Неизменяемый журнал: что система увидела, решила и кто что подтвердил. Основа для споров надзора с подрядчиком и для документальной стороны ISO 45001.',
+  trigger:'Каждое событие шины и каждое решение человека.',
+  inputs:['все события шины','подтверждения и отклонения людей','журнал доступа к данным'],
+  outputs:['журнал с хэш-цепочкой','пакеты доказательств','метки для калибровки моделей и порогов'],
+  logic:['Каждая запись входит в хэш-цепочку.','Пакет доказательств: клип, метаданные, версия модели, хэш.','Сроки хранения по уровням: около 30 дней стандартно, 60–90 дней для доказательной базы (по сводке).','Метки «подтвердил» и «отклонил» экспортируются как разметка для A3, A5 и порогов.','Журнал доступа: кто смотрел какие данные.'],
+  tech:['Append-only хранилище с хэш-цепочкой.','Политики сроков хранения привязаны к классу приватности события.'],
+  hitl:'Доступ к пакетам доказательств выдаётся по ролям и фиксируется.',
+  fail:'Если запись в журнал не удалась, критичное событие всё равно доставляется, а сбой записи поднимается как инцидент.',
+  metrics:['полнота журнала (события в шине против записей)','время сборки пакета доказательств'],
+  rollout:[{p:1,t:'Журнал событий и подтверждений'},{p:3,t:'Пакеты доказательств, журнал доступа'},{p:4,t:'Экспорт для регуляторов'}]
+}
+];
+AG.forEach(a=>{ a.intro = a.rollout[0].p; });
+const BY = Object.fromEntries(AG.map(a=>[a.id,a]));
+
+const SCENARIOS = [
+ {id:'onb', title:'Подключение объекта', intro:'Ф1. Клиент загружает график и смету, система готовится к мониторингу. Мониторинг не стартует, пока клиент не подтвердил модель.', steps:[
+   {a:['A1'],t:'Клиент загружает график и смету (Excel, PDF или CSV). Парсер извлекает таблицы и строит черновик эталонной модели.'},
+   {a:['A1'],t:'Неоднозначные строки уходят клиенту как вопросы: не угадываются.'},
+   {a:['A0'],t:'Клиент подтверждает модель. Состояние объекта: model_confirmed.'},
+   {a:['A2','A3'],t:'Монтаж камер. A2 проверяет уведомления сотрудников и основание обработки, A3 калибруется под зоны объекта. Состояние: hardware_ready.'},
+   {a:['A0'],t:'Состояние monitoring. Запускается ежедневный цикл.'}
+ ]},
+ {id:'day', title:'Обычный день', intro:'Ф1. Утро, день и вечер на объекте. Уведомления только при отклонениях.', steps:[
+   {a:['A0','A14'],t:'Утром A14 собирает для прораба сводку: что сделано против плана, какие материалы прибыли и куда распределены, кто и сколько часов был на площадке.'},
+   {a:['A2','A3'],t:'В течение дня A2 очищает кадры, A3 превращает их в наблюдения: этапы, техника, материалы, присутствие.'},
+   {a:['A5','A6'],t:'A5 обновляет прогресс, A6 ведёт журнал материалов. Если всё по плану, уведомлений нет.'},
+   {a:['A5','A13'],t:'Появилось отклонение (отставание, материалы не там). A13 решает, кому и как сообщить, и ждёт подтверждения.'},
+   {a:['A5','A16'],t:'Вечером A5 делает сверку, A16 фиксирует события и решения; подтверждения и отклонения людей становятся разметкой для калибровки.'}
+ ]},
+ {id:'heat', title:'Жара над бетонными работами', intro:'Ф2 для погодной части, Ф4 для полной связки с людьми. Показывает, ради чего строится единая платформа.', steps:[
+   {a:['A7'],t:'A7 видит: прогноз на завтра выше порога для класса «бетон» в окне заливки. Событие weather.risk по задаче.'},
+   {a:['A12'],t:'A12 строит 2–3 варианта: сдвинуть на раннее утро, на вечер или заняться другой задачей. По каждому показано влияние на сроки.'},
+   {a:['A13','A0'],t:'A13 доставляет предложение прорабу. Он выбирает вариант. Событие plan.approved.'},
+   {a:['A4','A8'],t:'На следующий день A4 передаёт данные браслетов, A8 непрерывно оценивает риск теплового стресса по работникам и бригаде.'},
+   {a:['A11'],t:'A11 соединяет время бригады в открытой зоне (A3, A4), прогноз (A7) и растущий heat.risk (A8). Получается fusion.risk: риск и для плана, и для людей. В Fusion идёт только агрегат по бригаде.'},
+   {a:['A13','A16'],t:'A13: вибрация на устройстве работника и уведомление супервайзеру. Супервайзер отправляет бригаду на отдых. A16 записывает всю цепочку событий и решений.'}
+ ]},
+ {id:'str', title:'Сигнал по колонне', intro:'Ф3, пилот без авто-эвакуации. Все решения принимают люди.', steps:[
+   {a:['A9'],t:'Датчик на инструментируемой колонне превышает порог предупреждения. Событие structure.risk с уровнем warning.'},
+   {a:['A3'],t:'При необходимости A9 запрашивает у A3 подтверждающие признаки на видео. Это слабый сигнал, не вердикт.'},
+   {a:['A13'],t:'A13 уведомляет инженера и менеджера проекта и требует подтверждения (require_ack).'},
+   {a:['A13'],t:'Нет подтверждения за установленное время: эскалация вверх по цепочке. Уровень «критично»: решение об остановке и эвакуации принимают люди.'},
+   {a:['A16'],t:'A16 формирует пакет доказательств: данные датчика, клип, версии моделей и порогов, все подтверждения и время реакции.'}
+ ]},
+ {id:'carb', title:'Материалы → углеродный след', intro:'Ф3, первая связка с Sustainability. Методология расчёта в сводке пока не определена, поэтому A10 остаётся каркасом.', steps:[
+   {a:['A3','A6'],t:'A3 видит приход бетона и арматуры, A6 записывает их в журнал материалов с зоной и интервалом неопределённости.'},
+   {a:['A10'],t:'A10 умножает количество на коэффициент выбросов и ведёт carbon.ledger. Для материалов без коэффициента позиция помечается.'},
+   {a:['A11'],t:'A11 сопоставляет журнал с графиком: например, задержка поставки и изменение логистики.'},
+   {a:['A14'],t:'A14 включает раздел о следе в отчёт инвестору и готовит данные для экологической отчётности; в тексте указано, из каких данных получено число.'}
+ ]}
+];
+
+const CONTRACTS = [
+ {id:'env', title:'Конверт', code:
+`{
+  "event_id": "01JA8Q4W7E5K2R9H3M6T",          // ULID, ключ идемпотентности
+  "type": "vision.detection",
+  "schema_version": "1.2",
+  "site_id": "site-007",
+  "ts": "2026-10-15T09:41:07Z",
+  "producer": { "agent": "A3", "model": "detector@2026.10-a" },
+  "privacy_class": "P1",                        // P0 публичное ... P3 здоровье
+  "purpose": "progress_monitoring",             // цель обработки, ставит A2
+  "ttl_days": 30,
+  "correlation_id": "frm-20261015-0941-cam03",  // сквозной ID от кадра до алерта
+  "causation_id": "01JA8Q4W1C...",              // какое событие породило это
+  "confidence": 0.87,
+  "payload": { }
+}`},
+ {id:'det', title:'vision.detection', code:
+`"payload": {
+  "camera_id": "cam-03",
+  "zone_id": "L12-east",
+  "class": "rebar_cage_column",
+  "bbox": [412, 188, 655, 502],
+  "task_hint": "WBS-3.4.12",
+  "needs_review": false,
+  "clip_ref": "obj://clips/site-007/2026/10/15/0941-cam03.mp4"
+}`},
+ {id:'heat', title:'heat.risk', code:
+`"payload": {
+  "scope": "crew",                      // индивидуальный scope доступен только A13
+  "crew_id": "crew-b",
+  "level": "elevated",                  // normal | elevated | high | critical
+  "drivers": ["core_temp_estimate", "sustained_load", "environment_index"],
+  "workers_total": 14,
+  "workers_above_threshold": 2,
+  "recommendation": "rest_cycle",
+  "data_quality": { "no_signal_workers": 1 }
+}`},
+ {id:'fus', title:'fusion.risk', code:
+`"payload": {
+  "task_id": "WBS-3.4.12",
+  "window": ["2026-10-16T11:00:00Z", "2026-10-16T15:00:00Z"],
+  "factors": [
+    { "src": "weather.risk",    "ref": "01JA8Q...", "param": "temperature" },
+    { "src": "heat.risk",       "ref": "01JA8R...", "scope": "crew" },
+    { "src": "vision.presence", "zone": "L12-east", "minutes_exposed": 190 }
+  ],
+  "level": "high",
+  "completeness": "full"                // full | partial: чего-то не хватило
+}`},
+ {id:'alr', title:'alert.dispatched', code:
+`"payload": {
+  "alert_id": "alr-5531",
+  "source_event": "01JA8S...",
+  "priority": "P2",
+  "audience": [
+    { "role": "worker",     "channel": "device_vibration" },
+    { "role": "supervisor", "channel": "push" }
+  ],
+  "escalate_after_s": 300,
+  "require_ack": true,
+  "ack": null                           // заполняется событием alert.ack
+}`}
+];
+
+/* =========================================================
+   DIAGRAM GEOMETRY
+   ========================================================= */
+const N = {
+  S3:[0,110,112,50,'Файлы проекта'], S1:[0,240,112,50,'Камеры, каски'], S2:[0,420,112,50,'Носимые'],
+  A1:[150,110,175,70], A2:[150,220,175,270],
+  A3:[365,230,170,70], A4:[365,410,170,70],
+  A5:[575,110,195,74], A6:[575,220,195,74], A7:[575,330,195,74], A8:[575,440,195,74], A9:[575,550,195,74], A10:[575,660,195,74],
+  A12:[830,140,165,80], A11:[830,280,165,130],
+  A13:[1030,120,170,76], A15:[1030,250,170,76], A14:[1030,510,170,76]
+};
+const cx = id => N[id][0] + N[id][2]/2;
+const cy = id => N[id][1] + N[id][3]/2;
+const R = (id,y) => [N[id][0]+N[id][2], y===undefined?cy(id):y];
+const L = (id,y) => [N[id][0], y===undefined?cy(id):y];
+const bez = (p,q) => { const dx=Math.max(20,(q[0]-p[0])/2); return `M${p[0]},${p[1]} C${p[0]+dx},${p[1]} ${q[0]-dx},${q[1]} ${q[0]},${q[1]}`; };
+const rail = id => `M${N[id][0]+N[id][2]},${cy(id)} H784 V98 H1012 V158 H1030`;
+
+const EDGES = [
+  ['S3','A1', bez(R('S3'),L('A1'))],
+  ['S1','A2', bez(R('S1'),L('A2',265))],
+  ['S2','A2', bez(R('S2'),L('A2',445))],
+  ['A2','A3', bez(R('A2',265),L('A3'))],
+  ['A2','A4', bez(R('A2',445),L('A4'))],
+  ['A1','A5', bez(R('A1'),L('A5'))],
+  ['A3','A5', bez(R('A3'),L('A5'))],
+  ['A3','A6', bez(R('A3'),L('A6'))],
+  ['A3','A9', bez(R('A3'),L('A9')), 'dot'],
+  ['A4','A8', bez(R('A4'),L('A8'))],
+  ['A3','A11','M535,265 H552 V312 H830'],
+  ['A4','A11','M535,445 H552 V422 H815 V380 H830'],
+  ['A5','A12', bez(R('A5'),L('A12',165))],
+  ['A7','A12', bez(R('A7'),L('A12',195))],
+  ['A5','A11', bez(R('A5'),L('A11',345))],
+  ['A6','A11', bez(R('A6'),L('A11',345))],
+  ['A7','A11', bez(R('A7'),L('A11',345))],
+  ['A8','A11', bez(R('A8'),L('A11',345))],
+  ['A10','A11', bez(R('A10'),L('A11',345)), 'dot'],
+  ['A5','A13', rail('A5')],
+  ['A6','A13', rail('A6')],
+  ['A7','A13', rail('A7')],
+  ['A8','A13', rail('A8')],
+  ['A9','A13', rail('A9')],
+  ['A11','A12','M912,280 V220'],
+  ['A12','A13', bez(R('A12'),L('A13',150))],
+  ['A11','A13', bez(R('A11',330),L('A13',175))],
+  ['A12','A15', bez(R('A12'),L('A15',275))],
+  ['A11','A14', bez(R('A11',380),L('A14'))],
+  ['A10','A14', bez(R('A10'),L('A14'))]
+];
+
+let curId = null;
+let curPhase = 4;   // 4 = все
+
+/* =========================================================
+   RENDER DIAGRAM
+   ========================================================= */
+const svgNS = 'http://www.w3.org/2000/svg';
+const dia = document.getElementById('dia');
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function buildDiagram(){
+  let h = '';
+  h += `<defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+  </defs>`;
+
+  // column headers
+  const heads = [[0,'Источники'],[150,'Защита и план'],[365,'Наблюдение'],[575,'Анализ по продуктам'],[830,'Связка и решения'],[1030,'Действие и результат']];
+  heads.forEach(([x,t])=>{ h += `<text class="col-h" x="${x}" y="62">${t}</text>`; });
+
+  // edges
+  EDGES.forEach((e,i)=>{
+    h += `<path class="edge ${e[3]||''}" data-i="${i}" d="${e[2]}" marker-end="url(#ar)"/>`;
+  });
+
+  // bands: orchestrator, bus, audit
+  const band = (id,x,y,w,hh,title,sub)=>{
+    const a = BY[id];
+    return `<g class="node band" data-id="${id}" tabindex="0" role="button" aria-label="${esc(a.ru)}">
+      <rect class="box" x="${x}" y="${y}" width="${w}" height="${hh}" rx="6"/>
+      <rect class="strip" x="${x}" y="${y}" width="5" height="${hh}" fill="${PROD[a.prod].c}"/>
+      <text class="nid" x="${x+16}" y="${y+hh/2+4}">${id==='BUS'?'':id}</text>
+      <text class="nname" x="${x+(id==='BUS'?16:48)}" y="${y+hh/2+4.5}">${title}</text>
+      <text class="nsub" x="${x+w-14}" y="${y+hh/2+4}" text-anchor="end">${sub}</text>
+    </g>`;
+  };
+  h += band('A0',150,0,1050,36,'Orchestrator','долгие процессы, состояние объекта, heartbeat агентов');
+  h += band('BUS',0,770,1200,38,'Шина событий','типизированные события с контрактом: все публикуют и подписываются');
+  h += band('A16',0,820,1200,38,'Audit & Evidence','подписан на все события и решения людей: журнал, доказательства, разметка');
+
+  // sources
+  ['S3','S1','S2'].forEach(id=>{
+    const [x,y,w,hh,t]=N[id];
+    h += `<g class="node src" data-src="${id}"><rect class="box" x="${x}" y="${y}" width="${w}" height="${hh}" rx="6"/><text class="nsub" x="${x+w/2}" y="${y+hh/2+4}" text-anchor="middle" style="fill:var(--ink)">${t}</text></g>`;
+  });
+
+  // agents
+  AG.forEach(a=>{
+    if(['A0','BUS','A16'].includes(a.id)) return;
+    const [x,y,w,hh]=N[a.id];
+    const c = PROD[a.prod].c;
+    let extra = '';
+    if(a.extra){
+      a.extra.forEach((ln,i)=>{ extra += `<text class="nx" x="${x+16}" y="${y+86+i*17}">${esc(ln)}</text>`; });
+    }
+    let badge = a.ext ? `<text class="nx" x="${x+w-8}" y="${y+hh-8}" text-anchor="end">вход: ${esc(a.ext)}</text>` : '';
+    h += `<g class="node" data-id="${a.id}" tabindex="0" role="button" aria-label="${a.id} ${esc(a.name)}: ${esc(a.ru)}">
+      <rect class="box" x="${x}" y="${y}" width="${w}" height="${hh}" rx="6"/>
+      <rect class="strip" x="${x}" y="${y}" width="5" height="${hh}" fill="${c}"/>
+      <text class="nid" x="${x+16}" y="${y+19}">${a.id}</text>
+      <text class="nname" x="${x+16}" y="${y+39}">${esc(a.name)}</text>
+      <text class="nsub" x="${x+16}" y="${y+57}">${esc(a.sub)}</text>
+      ${extra}${a.ext && hh<100 ? '' : ''}
+    </g>`;
+  });
+  dia.innerHTML = h;
+}
+
+/* list view for narrow screens */
+function buildList(){
+  const groups = [
+    ['Управление и шина', ['A0','BUS']],
+    ['Защита и план', ['A1','A2']],
+    ['Наблюдение', ['A3','A4']],
+    ['Анализ по продуктам', ['A5','A6','A7','A8','A9','A10']],
+    ['Связка и решения', ['A11','A12']],
+    ['Действие и результат', ['A13','A14','A15','A16']]
+  ];
+  let h = '';
+  groups.forEach(([t,ids])=>{
+    h += `<div class="lgroup"><h3>${t}</h3>`;
+    ids.forEach(id=>{
+      const a = BY[id];
+      h += `<button class="litem" data-id="${id}" style="border-left-color:${PROD[a.prod].c}">
+        <span class="mono">${id==='BUS'?'bus':id}</span>
+        <span><b>${esc(a.name)}</b><small>${esc(a.ru)}</small></span>
+        <span class="tag">Ф${a.intro}</span></button>`;
+    });
+    h += `</div>`;
+  });
+  document.getElementById('list').innerHTML = h;
+}
+
+/* =========================================================
+   STATE UPDATES
+   ========================================================= */
+function applyState(){
+  const ph = curPhase;
+  // nodes
+  document.querySelectorAll('#dia .node[data-id], #list .litem').forEach(el=>{
+    const a = BY[el.dataset.id];
+    el.classList.toggle('off', a.intro > ph);
+    el.classList.toggle('sel', el.dataset.id === curId);
+  });
+  // edges
+  const hlColor = curId && BY[curId] ? PROD[BY[curId].prod].c : 'var(--ink)';
+  document.querySelectorAll('#dia .edge').forEach(p=>{
+    const e = EDGES[+p.dataset.i];
+    const live = BY[e[0]] ? BY[e[0]].intro <= ph : true;
+    const live2 = BY[e[1]].intro <= ph;
+    const on = live && live2;
+    const touches = curId && (e[0]===curId || e[1]===curId);
+    p.classList.toggle('off', !on);
+    p.classList.toggle('hl', !!touches && on);
+    p.classList.toggle('dim', !!curId && !touches && on && ['A0','BUS','A16'].indexOf(curId)<0);
+    if(touches && on){ p.style.stroke = hlColor; } else { p.style.stroke=''; }
+  });
+  // phase description
+  const pd = document.getElementById('phaseDesc');
+  if(ph>=4 && !window.__phaseExplicit){ pd.textContent = 'Показаны все агенты целевой архитектуры. Выберите фазу, чтобы увидеть, что уже работает к её концу.'; }
+  else { const P = PHASES.find(x=>x.p===ph); pd.textContent = `${P.label} (${P.months}), ${P.name}: ${P.desc}`; }
+}
+
+function setPhase(v){
+  window.__phaseExplicit = (v !== '4');
+  curPhase = v==='4b' ? 4 : parseInt(v,10);
+  document.querySelectorAll('#phaseSeg button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.p===v ? 'true':'false'));
+  applyState();
+  if(curId) renderSheet(curId);
+}
+
+/* =========================================================
+   SHEET
+   ========================================================= */
+const sheet = document.getElementById('sheet');
+const li = arr => '<ul>'+arr.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
+
+function renderSheet(id){
+  const a = BY[id];
+  const c = PROD[a.prod].c;
+  sheet.style.borderTopColor = c;
+  // last rollout item active in current phase
+  let nowIdx = -1;
+  a.rollout.forEach((r,i)=>{ if(r.p <= curPhase) nowIdx = i; });
+  const ro = a.rollout.map((r,i)=>{
+    const P = PHASES.find(x=>x.p===r.p);
+    const cls = r.p > curPhase ? 'future' : (i===nowIdx ? 'now' : '');
+    return `<li class="${cls}"><span class="ph">${P.label}</span>${esc(r.t)}</li>`;
+  }).join('');
+  sheet.innerHTML = `
+    <div class="sh-head">
+      <span class="sh-id" style="color:${c}">${id==='BUS'?'bus':id}</span>
+      <span class="sh-name">${esc(a.name)}</span>
+      <span style="color:var(--mute);font-size:14px;">${esc(a.ru)}</span>
+      <span class="sh-tags">
+        <span class="tag" style="border-color:${c}">${PROD[a.prod].name}</span>
+        ${a.mode.map(m=>`<span class="tag">${esc(m)}</span>`).join('')}
+        <span class="tag">с фазы Ф${a.intro}</span>
+      </span>
+      <button class="sh-close" aria-label="Закрыть карточку" id="shClose">×</button>
+    </div>
+    <div class="sh-body">
+      <div class="sh-col">
+        <div><h4>Роль</h4><p>${esc(a.role)}</p></div>
+        <div><h4>Когда срабатывает</h4><p>${esc(a.trigger)}</p></div>
+        <div><h4>Получает</h4>${li(a.inputs)}</div>
+        <div><h4>Отдаёт</h4>${li(a.outputs)}</div>
+      </div>
+      <div class="sh-col">
+        <div><h4>Логика по шагам</h4><ol>${a.logic.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>
+        <div><h4>Человек в контуре</h4><p>${esc(a.hitl)}</p></div>
+        <div><h4>Как отказывает</h4><p>${esc(a.fail)}</p></div>
+      </div>
+      <div class="sh-col">
+        <div><h4>Технологии <span class="tag prop" style="margin-left:4px;">предложение</span></h4>${li(a.tech)}</div>
+        <div><h4>Метрики качества</h4>${li(a.metrics)}</div>
+        <div><h4>Выпуск по фазам</h4><ul class="ro">${ro}</ul></div>
+        ${a.note?`<div><h4>Примечание</h4><p>${esc(a.note)}</p></div>`:''}
+        ${a.open?`<div class="warnbox"><h4 style="color:var(--pulse)">Не определено</h4>${esc(a.open)}</div>`:''}
+      </div>
+    </div>`;
+  document.getElementById('shClose').addEventListener('click', closeSheet);
+}
+
+function openSheet(id, fromEl){
+  curId = id;
+  renderSheet(id);
+  sheet.classList.add('open');
+  sheet.querySelector('.sh-body').scrollTop = 0;
+  applyState();
+  requestAnimationFrame(()=>{
+    document.body.style.paddingBottom = (sheet.offsetHeight + 24) + 'px';
+    if(fromEl){
+      const r = fromEl.getBoundingClientRect();
+      const limit = innerHeight - sheet.offsetHeight - 24;
+      if(r.bottom > limit || r.top < 70){
+        window.scrollBy({top: r.top - 110});
+      }
+    }
+  });
+}
+function closeSheet(){
+  sheet.classList.remove('open');
+  document.body.style.paddingBottom = '';
+  curId = null;
+  applyState();
+}
+
+/* =========================================================
+   TABS, CATALOG, PHASES
+   ========================================================= */
+function buildTabs(tabsEl, panelEl, items, renderPanel){
+  tabsEl.innerHTML = items.map((it,i)=>`<button role="tab" id="${tabsEl.id}-${i}" aria-selected="${i===0}" data-i="${i}">${esc(it.title)}</button>`).join('');
+  const show = i=>{
+    tabsEl.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected', +b.dataset.i===i ? 'true':'false'));
+    panelEl.setAttribute('aria-labelledby', `${tabsEl.id}-${i}`);
+    panelEl.innerHTML = renderPanel(items[i]);
+    panelEl.querySelectorAll('.chip').forEach(ch=> ch.addEventListener('click',()=>openSheet(ch.dataset.id)));
+  };
+  tabsEl.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) show(+b.dataset.i); });
+  show(0);
+}
+
+function scenarioPanel(s){
+  return `<p class="sc-intro">${esc(s.intro)}</p><ol class="steps">` +
+    s.steps.map(st=>`<li><span class="chips">${st.a.map(id=>`<button class="chip" data-id="${id}">${id}</button>`).join('')}</span><span class="st">${esc(st.t)}</span></li>`).join('') + `</ol>`;
+}
+function contractPanel(c){ return `<pre><code>${esc(c.code).replace(/(\/\/[^\n]*)/g,'<span class="cm">$1</span>')}</code></pre>`; }
+
+function buildCatalog(){
+  const tb = document.querySelector('#catTable tbody');
+  tb.innerHTML = AG.filter(a=>a.id!=='BUS').map(a=>`
+    <tr class="click" data-id="${a.id}" tabindex="0">
+      <td><span class="dot-p" style="background:${PROD[a.prod].c}"></span><b class="mono" style="font-size:12.5px;">${a.id}</b> ${esc(a.name)}</td>
+      <td>${esc(a.role.split('. ')[0].replace(/\.$/,''))}.</td>
+      <td>${esc(a.trigger.split(';')[0].replace(/\.$/,''))}</td>
+      <td>${a.mode.map(m=>`<span class="tag" style="margin:0 4px 4px 0">${esc(m)}</span>`).join('')}</td>
+      <td>Ф${a.intro}</td>
+    </tr>`).join('');
+  tb.addEventListener('click',e=>{ const tr=e.target.closest('tr'); if(tr) openSheet(tr.dataset.id); });
+  tb.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ const tr=e.target.closest('tr'); if(tr){ e.preventDefault(); openSheet(tr.dataset.id);} } });
+}
+
+function buildPhaseRows(){
+  const el = document.getElementById('phaseRows');
+  el.innerHTML = PHASES.map(P=>{
+    const items = [];
+    AG.forEach(a=>{ a.rollout.forEach(r=>{ if(r.p===P.p) items.push({a,t:r.t}); }); });
+    return `<div class="phase-row">
+      <div class="pn">${P.label}. ${P.name}<small>${P.months}</small></div>
+      <div><p style="color:var(--mute);margin-bottom:10px;">${esc(P.desc)}</p>
+      <ul>${items.map(i=>`<li><button class="chip" data-id="${i.a.id}">${i.a.id==='BUS'?'bus':i.a.id}</button>${esc(i.t)}</li>`).join('')}</ul></div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>openSheet(ch.dataset.id)));
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+buildDiagram();
+buildList();
+buildTabs(document.getElementById('scTabs'), document.getElementById('scPanel'), SCENARIOS, scenarioPanel);
+buildTabs(document.getElementById('ctTabs'), document.getElementById('ctPanel'), CONTRACTS, contractPanel);
+buildCatalog();
+buildPhaseRows();
+applyState();
+
+dia.addEventListener('click', e=>{
+  const g = e.target.closest('.node[data-id]');
+  if(g) openSheet(g.dataset.id, g);
+});
+dia.addEventListener('keydown', e=>{
+  if(e.key==='Enter' || e.key===' '){
+    const g = e.target.closest('.node[data-id]');
+    if(g){ e.preventDefault(); openSheet(g.dataset.id, g); }
+  }
+});
+document.getElementById('list').addEventListener('click', e=>{
+  const b = e.target.closest('.litem');
+  if(b) openSheet(b.dataset.id, b);
+});
+document.getElementById('phaseSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(b) setPhase(b.dataset.p);
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && sheet.classList.contains('open')) closeSheet(); });
+window.addEventListener('resize', ()=>{ if(sheet.classList.contains('open')) document.body.style.paddingBottom = (sheet.offsetHeight+24)+'px'; });
+</script>
+</body>
+</html>
